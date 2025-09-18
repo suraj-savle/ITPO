@@ -1,68 +1,29 @@
+@import "tailwindcss";
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  --primary-color: #2563eb; /* blue-600 */
+  --primary-dark: #1e40af; /* blue-800 */
+  --secondary-color: #facc15; /* yellow-400 */
+  --text-dark: #1f2937; /* gray-800 */
+  --text-light: #6b7280; /* gray-500 */
+  --bg-light: #f9fafb; /* gray-50 */
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  --pmss1-primary: #1a73e8; /* Google Blue */
+  --pmss1-secondary: #2e2e2e; /* Charcoal Black */
+  --pmss1-background: #ffffff; /* White */
+  --pmss1-accent: #f5f7fa; /* Light Grey */
+  --pmss1-highlight: #34a853; /* Green */
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  /* 🎨 Palette 2: Classic & Elegant */
+  --pmss2-primary: #0047ab; /* Royal Blue */
+  --pmss2-secondary: #ffd700; /* Golden Yellow */
+  --pmss2-background: #fafafa; /* Off-White */
+  --pmss2-text: #1f2937; /* Dark Slate */
+  --pmss2-accent: #d1d5db; /* Light Grey */
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+  --pmss-primary: #6d28d9; /* Purple */
+  --pmss-secondary: #f97316; /* Orange */
+  --pmss-background: #ffffff;
+  --pmss-text: #1e293b;
+  --pmss-accent: #f3f4f6;
 }
