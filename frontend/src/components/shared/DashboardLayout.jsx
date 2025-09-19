@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Bell, LogOut, Menu, X, User, Briefcase, Users, BarChart3, CheckCircle, Award, Megaphone } from 'lucide-react';
 
@@ -7,15 +7,37 @@ const DashboardLayout = ({ userRole = 'student' }) => {
   const [notifications] = useState([
     { id: 1, text: 'New notification', time: '1h ago' }
   ]);
+  const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await fetch('http://localhost:5000/api/auth/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setUserData(data.student || data.user);
+          }
+        } catch (error) {
+          console.error('Failed to fetch user data:', error);
+        }
+      }
+    };
+    fetchUserData();
+  }, []);
+
   const menuConfig = {
     student: {
-      title: 'Campus Connect',
-      userName: 'John Doe',
+      title: 'ITPO Portal',
+      userName: userData?.name || userData?.username || 'Student',
       items: [
-        { path: '/student', label: 'Profile', icon: User },
+        { path: '/student', label: 'Dashboard', icon: BarChart3 },
+        { path: '/student/profile', label: 'Profile', icon: User },
         { path: '/student/jobs', label: 'Job Openings', icon: '💼' },
         { path: '/student/applications', label: 'My Applications', icon: '📋' },
         { path: '/student/certificates', label: 'Certificates', icon: '🏆' }
@@ -31,13 +53,12 @@ const DashboardLayout = ({ userRole = 'student' }) => {
       ]
     },
     admin: {
-      title: 'Campus Connect - Admin',
-      userName: 'Admin User',
+      title: 'ITPO Portal - Admin',
+      userName: userData?.name || 'Admin User',
       items: [
-        { path: '/admin', label: 'Job Openings', icon: Briefcase },
-        { path: '/admin/applications', label: 'Student Applications', icon: Users },
-        { path: '/admin/certificates', label: 'Certificates', icon: Award },
-        { path: '/admin/announcements', label: 'Announcements', icon: Megaphone }
+        { path: '/admin', label: 'Dashboard', icon: BarChart3 },
+        { path: '/admin/approvals', label: 'Student Approvals', icon: CheckCircle },
+        { path: '/admin/users', label: 'User Management', icon: Users }
       ]
     }
   };
@@ -51,42 +72,45 @@ const DashboardLayout = ({ userRole = 'student' }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="flex items-center justify-between px-4 py-3">
+      <header className="bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 rounded-md hover:bg-gray-100"
+              className="lg:hidden p-2 rounded-xl hover:bg-gray-50 transition-colors"
             >
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
-            <h1 className="text-xl font-bold text-blue-600">{config.title}</h1>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">{config.title}</h1>
+              <p className="text-sm text-gray-500">Welcome back, {config.userName}</p>
+            </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="relative">
-              <Bell className="w-6 h-6 text-gray-600 cursor-pointer hover:text-blue-600" />
-              {notifications.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {notifications.length}
-                </span>
-              )}
+              <button className="p-2 rounded-xl hover:bg-gray-50 transition-colors">
+                <Bell className="w-5 h-5 text-gray-600" />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-medium">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
             </div>
             
-            <div className="flex items-center gap-2">
-              <img
-                src="https://via.placeholder.com/32"
-                alt="Profile"
-                className="w-8 h-8 rounded-full"
-              />
-              <span className="hidden sm:block text-sm font-medium whitespace-nowrap">{config.userName}</span>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm">
+                {config.userName.charAt(0).toUpperCase()}
+              </div>
+              <span className="hidden sm:block text-sm font-medium text-gray-900">{config.userName}</span>
             </div>
             
             <button
               onClick={handleLogout}
-              className="p-2 text-gray-600 hover:text-red-600 rounded-md hover:bg-gray-100 flex-shrink-0"
+              className="p-2 text-gray-500 hover:text-red-600 rounded-xl hover:bg-gray-50 transition-colors"
             >
-              <LogOut size={18} />
+              <LogOut size={16} />
             </button>
           </div>
         </div>

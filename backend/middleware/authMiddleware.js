@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import Student from "../models/StudentModel.js";
+import User from "../models/UserModel.js";
 
 export const protect = async (req, res, next) => {
   let token;
@@ -11,11 +11,11 @@ export const protect = async (req, res, next) => {
       // Verify JWT
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Attach student to request
-      req.student = await Student.findById(decoded.id).select("-password");
+      // Attach user to request
+      req.user = await User.findById(decoded.id).select("-password");
 
-      if (!req.student) {
-        return res.status(404).json({ message: "Student not found" });
+      if (!req.user) {
+        return res.status(404).json({ message: "User not found" });
       }
 
       next();
@@ -24,5 +24,29 @@ export const protect = async (req, res, next) => {
     }
   } else {
     return res.status(401).json({ message: "No token, not authorized" });
+  }
+};
+
+export const adminOnly = (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    next();
+  } else {
+    res.status(403).json({ message: "Access denied. Admin only." });
+  }
+};
+
+export const mentorOnly = (req, res, next) => {
+  if (req.user && req.user.role === "mentor") {
+    next();
+  } else {
+    res.status(403).json({ message: "Access denied. Mentor only." });
+  }
+};
+
+export const studentOnly = (req, res, next) => {
+  if (req.user && req.user.role === "student") {
+    next();
+  } else {
+    res.status(403).json({ message: "Access denied. Student only." });
   }
 };

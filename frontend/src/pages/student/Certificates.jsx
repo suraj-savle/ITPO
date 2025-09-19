@@ -62,9 +62,9 @@ const Certificates = () => {
   const inProgressCertificates = certificates.filter(cert => cert.status === 'in_progress');
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Certificates</h1>
+    <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold">Certificates</h1>
         <div className="text-sm text-gray-600">
           {completedCertificates.length} completed, {inProgressCertificates.length} in progress
         </div>

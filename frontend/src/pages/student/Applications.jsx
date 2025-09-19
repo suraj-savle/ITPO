@@ -66,9 +66,9 @@ const Applications = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Applications</h1>
+    <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold">My Applications</h1>
         <div className="text-sm text-gray-600">
           {applications.length} applications
         </div>
@@ -79,19 +79,19 @@ const Applications = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Job Details
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Applied Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Interview
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -99,7 +99,7 @@ const Applications = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {applications.map((application) => (
                 <tr key={application.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
                         {application.jobTitle}
@@ -107,15 +107,18 @@ const Applications = () => {
                       <div className="text-sm text-gray-500">
                         {application.company}
                       </div>
+                      <div className="sm:hidden text-xs text-gray-400 mt-1">
+                        {new Date(application.appliedDate).toLocaleDateString()}
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {new Date(application.appliedDate).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(application.status)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {application.interviewDate ? (
                       <div className="flex items-center gap-2">
                         <Calendar size={16} className="text-blue-600" />
@@ -125,14 +128,14 @@ const Applications = () => {
                       <span className="text-gray-400">Not scheduled</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
                     {canWithdraw(application.status) && (
                       <button
                         onClick={() => handleWithdraw(application.id)}
                         className="text-red-600 hover:text-red-900 flex items-center gap-1"
                       >
-                        <X size={16} />
-                        Withdraw
+                        <X size={14} className="sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Withdraw</span>
                       </button>
                     )}
                   </td>
