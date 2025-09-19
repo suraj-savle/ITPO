@@ -8,6 +8,10 @@ import Profile from "./pages/student/Profile";
 import JobOpenings from "./pages/student/JobOpenings";
 import Applications from "./pages/student/Applications";
 import Certificates from "./pages/student/Certificates";
+import MentorLayout from "./components/mentor/MentorLayout";
+import Mentees from "./pages/mentor/Mentees";
+import Approvals from "./pages/mentor/Approvals";
+import Progress from "./pages/mentor/Progress";
 
 function App() {
   return (
@@ -22,6 +26,12 @@ function App() {
           <Route path="jobs" element={<JobOpenings />} />
           <Route path="applications" element={<Applications />} />
           <Route path="certificates" element={<Certificates />} />
+        </Route>
+        
+        <Route path="/mentor" element={<MentorLayout />}>
+          <Route index element={<Mentees />} />
+          <Route path="approvals" element={<Approvals />} />
+          <Route path="progress" element={<Progress />} />
         </Route>
       </Routes>
       <Toaster position="top-right" />
