@@ -36,7 +36,14 @@ export default function Register() {
         navigate("/student");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Server Error");
+      console.error('Registration error:', err);
+      if (err.response) {
+        setError(err.response.data?.message || "Server Error");
+      } else if (err.request) {
+        setError("Cannot connect to server. Please check if backend is running.");
+      } else {
+        setError("An unexpected error occurred");
+      }
     } finally {
       setLoading(false);
     }

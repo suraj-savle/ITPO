@@ -20,11 +20,12 @@ app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 connectDB();
 
 // Routes
+// Test route
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Backend is working!' });
+});
+
 app.use("/api/auth", authRoutes);
-// app.use("/api/student", studentRoutes);
-
-
-
 app.use("/api/student", studentRoutes);
 
 
