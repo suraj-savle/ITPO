@@ -1,8 +1,0 @@
-{
-  "name": "itpo",
-  "version": "1.0.0",
-  "description": "Internship and Training Placement Office Management System",
-  "scripts": {
-    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
-  }
-}
