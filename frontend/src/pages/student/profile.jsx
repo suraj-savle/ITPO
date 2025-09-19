@@ -5,12 +5,12 @@ export default function Profile() {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-    const token = localStorage.getItem("token")
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/student/profile`, {
+        const res = await fetch("http://localhost:5000/api/auth/profile", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
