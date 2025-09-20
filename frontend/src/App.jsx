@@ -19,6 +19,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import RecruiterStudentProfile from "./pages/recruiter/RecruiterStudentProfile";
 import StudentsList from "./pages/recruiter/StudentsList";
 import AdminPostSection from "./pages/admin/AdminPostSection";
+import RecruiterJobs from "./pages/recruiter/RecruiterJobs";
 
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
           <Route index element={<div>Recruiter Dashboard - Coming Soon</div>} />
           <Route path="/recruiter/students" element={<StudentsList />} />
           <Route path="/recruiter/student/:id" element={<RecruiterStudentProfile />} />
+          <Route path="/recruiter/post" element={<RecruiterJobs /> } />
         </Route>
         
         <Route path="/admin" element={<ProtectedRoute><DashboardLayout userRole="admin" /></ProtectedRoute>}>

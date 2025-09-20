@@ -1,19 +1,30 @@
+// backend/models/ApplicationModel.js
 import mongoose from "mongoose";
 
 const applicationSchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  jobId: { type: mongoose.Schema.Types.ObjectId, ref: "Job", required: true },
-  status: { 
-    type: String, 
-    enum: ["applied", "shortlisted", "interview", "selected", "rejected"], 
-    default: "applied" 
+  student: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  job: { type: mongoose.Schema.Types.ObjectId, ref: "Job", required: true },
+  mentor: { type: mongoose.Schema.Types.ObjectId, ref: "User" },     // student's mentor
+  recruiter: { type: mongoose.Schema.Types.ObjectId, ref: "User" },  // job.createdBy
+  status: {
+    type: String,
+    enum: [
+      "pending mentor approval",
+      "rejected by mentor",
+      "pending recruiter review",
+      "rejected by recruiter",
+      "interview scheduled",
+      "hired"
+    ],
+    default: "pending mentor approval"
   },
-  appliedDate: { type: Date, default: Date.now },
+  studentNote: { type: String, default: "" }, // optional message student adds
+  mentorNote: { type: String, default: "" },
+  recruiterNote: { type: String, default: "" },
   interviewDate: { type: Date },
-  feedback: { type: String, default: "" },
-  notes: { type: String, default: "" }
 }, { timestamps: true });
 
-applicationSchema.index({ studentId: 1, jobId: 1 }, { unique: true });
+applicationSchema.index({ student: 1, job: 1 }, { unique: true }); // prevent duplicate apply
 
-export default mongoose.model("Application", applicationSchema);
+const Application = mongoose.model("Application", applicationSchema);
+export default Application;
