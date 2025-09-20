@@ -81,6 +81,7 @@ const DashboardLayout = ({ userRole = "student" }) => {
       items: [
         { path: "/recruiter", label: "My Mentees", icon: Users },
         { path: "/recruiter/students", label: "Student", icon: Users },
+        { path: "/recruiter/post", label: "Posts", icon: Briefcase },
       ],
     },
     admin: {

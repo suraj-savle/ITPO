@@ -9,6 +9,8 @@ import recruiterRoutes from "./routes/recruiterRoutes.js";
 import mentorRoutes from "./routes/mentorRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
+import applicationRoutes from "./routes/applicationRoutes.js";
+
 
 dotenv.config();
 const app = express();
@@ -147,7 +149,9 @@ app.use("/api/student", studentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/recruiter", recruiterRoutes);
 app.use("/api/mentor", mentorRoutes);
-app.use("/api/jobs", jobRoutes);
+
+app.use("/api", jobRoutes);            // GET /api/jobs, POST /api/jobs
+app.use("/api/applications", applicationRoutes); // POST /api/applications/:jobId/apply, GET /api/applications/my, etc.
 
 app.use("/api", postRoutes);
 
