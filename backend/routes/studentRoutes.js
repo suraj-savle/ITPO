@@ -18,7 +18,15 @@ router.get("/profile", protect, studentOnly, async (req, res) => {
   }
 });
 
-// Add update profile route
-router.put("/update-profile", protect, studentOnly, upload.single('resume'), updateProfile);
+router.put(
+  "/update-profile",
+  protect,
+  studentOnly,
+  upload.fields([
+    { name: "resume", maxCount: 1 },
+    { name: "profile", maxCount: 1 }
+  ]), // handle resume upload
+  updateProfile
+);
 
 export default router;

@@ -34,72 +34,32 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setLoading(true);
     const loadingToast = toast.loading("Signing in...");
 
     try {
-      const res = await fetch(`http://localhost:5000/api/auth/login`, {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.toLowerCase(), password }),
       });
 
       if (!res.ok) {
-        const text = await res.text();
-        let errorMessage = "Login failed";
-        
-        if (res.status === 404) {
-          errorMessage = "Backend server not running or endpoint not found";
-        } else if (res.status === 401) {
-          errorMessage = "Invalid email or password";
-        } else if (res.status === 429) {
-          errorMessage = "Too many login attempts. Please try again later";
-        } else {
-          try {
-            const data = JSON.parse(text);
-            errorMessage = data.message || errorMessage;
-          } catch {
-            errorMessage = "Server returned invalid response";
-          }
-        }
-        throw new Error(errorMessage);
+        const data = await res.json();
+        throw new Error(data.message || "Login failed");
       }
 
       const data = await res.json();
-
-      // Validate token before storing
-      if (!data.token) {
-        throw new Error("No authentication token received");
-      }
-
-      // Save token securely
       localStorage.setItem("token", data.token);
-      
-      // Save user data if available
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
+      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
 
       toast.dismiss(loadingToast);
       toast.success("Login successful!");
-
-      // Small delay for better UX
       setTimeout(() => {
-        // Redirect based on user role
-        if (data.role === "admin") {
-          navigate("/admin");
-        } else if (data.role === "mentor") {
-          navigate("/mentor");
-        } else if (data.role === "recruiter") {
-          navigate("/recruiter");
-        } else {
-          navigate("/student");
-        }
+        navigate(`/${data.role}`);
       }, 500);
     } catch (err) {
       toast.dismiss(loadingToast);
@@ -120,12 +80,13 @@ export default function Login() {
       </Link>
       <div className="w-full max-w-md">
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            Welcome Back
+          </h1>
           <p className="text-gray-600">Sign in to your ITPO account</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8">
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Email</label>
@@ -140,7 +101,9 @@ export default function Login() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Password</label>
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -183,26 +146,26 @@ export default function Login() {
           </div>
         </div>
       </div>
-      <Toaster 
+      <Toaster
         position="top-center"
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#363636',
-            color: '#fff',
+            background: "#363636",
+            color: "#fff",
           },
           success: {
             duration: 3000,
             iconTheme: {
-              primary: '#4ade80',
-              secondary: '#fff',
+              primary: "#4ade80",
+              secondary: "#fff",
             },
           },
           error: {
             duration: 4000,
             iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+              primary: "#ef4444",
+              secondary: "#fff",
             },
           },
         }}

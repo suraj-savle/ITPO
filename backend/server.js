@@ -5,6 +5,8 @@ import connectDB from "./config/db.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import recruiterRoutes from "./routes/recruiterRoutes.js";
+import postRoutes from "./routes/postRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -89,7 +91,9 @@ app.get('/api/debug/users', async (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/recruiter", recruiterRoutes);
 
+app.use("/api", postRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

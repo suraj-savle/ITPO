@@ -1,53 +1,62 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MapPin, DollarSign, Clock } from 'lucide-react';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 const JobOpenings = () => {
-  const [jobs] = useState([
-    {
-      id: 1,
-      company: 'TechCorp',
-      logo: 'https://via.placeholder.com/60',
-      title: 'Software Development Intern',
-      skills: ['React', 'Node.js', 'JavaScript'],
-      stipend: '$800-1200',
-      location: 'Remote',
-      type: 'Internship',
-      duration: '3 months',
-      description: 'Work on cutting-edge web applications...'
-    },
-    {
-      id: 2,
-      company: 'DataSoft',
-      logo: 'https://via.placeholder.com/60',
-      title: 'Data Science Intern',
-      skills: ['Python', 'SQL', 'Machine Learning'],
-      stipend: '$1000-1500',
-      location: 'New York, NY',
-      type: 'Internship',
-      duration: '6 months',
-      description: 'Analyze large datasets and build ML models...'
-    },
-    {
-      id: 3,
-      company: 'CloudTech',
-      logo: 'https://via.placeholder.com/60',
-      title: 'DevOps Trainee',
-      skills: ['AWS', 'Docker', 'Kubernetes'],
-      stipend: '$900-1300',
-      location: 'San Francisco, CA',
-      type: 'Training',
-      duration: '4 months',
-      description: 'Learn cloud infrastructure and deployment...'
-    }
-  ]);
-
+  const [jobs, setJobs] = useState([]);
   const [appliedJobs, setAppliedJobs] = useState(new Set());
+  const [loading, setLoading] = useState(true);
 
-  const handleApply = (jobId) => {
-    setAppliedJobs(new Set([...appliedJobs, jobId]));
-    toast.success('Application submitted successfully!');
+  useEffect(() => {
+    const fetchJobs = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login first');
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost:5000/api/posts', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch jobs');
+
+        const data = await res.json();
+        setJobs(data);
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to load job openings');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  const handleApply = async (postId) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/student/apply/${postId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error('Failed to apply');
+
+      setAppliedJobs(new Set([...appliedJobs, postId]));
+      toast.success('Application submitted successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to apply for this job');
+    }
   };
+
+  if (loading)
+    return <div className="flex items-center justify-center h-64 text-gray-500">Loading...</div>;
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-6">
@@ -60,7 +69,7 @@ const JobOpenings = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {jobs.map((job) => (
-          <div key={job.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 h-full flex flex-col">
+          <div key={job._id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 h-full flex flex-col">
             {/* Company Header */}
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white font-semibold">
@@ -79,54 +88,54 @@ const JobOpenings = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <MapPin size={16} className="flex-shrink-0" />
-                <span className="truncate">{job.location}</span>
+                <span className="truncate">{job.location || "Remote"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <DollarSign size={16} className="flex-shrink-0" />
-                <span className="truncate">{job.stipend}</span>
+                <span className="truncate">{job.stipend || "N/A"}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Clock size={16} className="flex-shrink-0" />
-                <span className="truncate">{job.duration}</span>
+                <span className="truncate">{job.duration || "N/A"}</span>
               </div>
             </div>
 
             {/* Skills */}
-            <div className="mb-4">
-              <p className="text-sm font-medium text-gray-700 mb-2">Skills:</p>
-              <div className="flex flex-wrap gap-1.5">
-                {job.skills.slice(0, 4).map((skill) => (
-                  <span
-                    key={skill}
-                    className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium"
-                  >
-                    {skill}
-                  </span>
-                ))}
-                {job.skills.length > 4 && (
-                  <span className="text-xs text-gray-500 px-2 py-1">
-                    +{job.skills.length - 4} more
-                  </span>
-                )}
+            {job.requirements && (
+              <div className="mb-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">Skills / Requirements:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {job.requirements.split(',').slice(0, 4).map((skill, i) => (
+                    <span
+                      key={i}
+                      className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-medium"
+                    >
+                      {skill.trim()}
+                    </span>
+                  ))}
+                  {job.requirements.split(',').length > 4 && (
+                    <span className="text-xs text-gray-500 px-2 py-1">
+                      +{job.requirements.split(',').length - 4} more
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Description */}
-            <p className="text-sm text-gray-600 mb-4 flex-1">
-              {job.description}
-            </p>
+            <p className="text-sm text-gray-600 mb-4 flex-1">{job.description}</p>
 
             {/* Apply Button */}
             <button
-              onClick={() => handleApply(job.id)}
-              disabled={appliedJobs.has(job.id)}
+              onClick={() => handleApply(job._id)}
+              disabled={appliedJobs.has(job._id)}
               className={`w-full py-3 px-4 rounded-lg font-medium transition-colors text-sm sm:text-base ${
-                appliedJobs.has(job.id)
+                appliedJobs.has(job._id)
                   ? 'bg-green-100 text-green-800 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
               }`}
             >
-              {appliedJobs.has(job.id) ? '✓ Applied' : 'Apply Now'}
+              {appliedJobs.has(job._id) ? '✓ Applied' : 'Apply Now'}
             </button>
           </div>
         ))}
@@ -139,6 +148,8 @@ const JobOpenings = () => {
           <p className="text-gray-600">Check back later for new opportunities!</p>
         </div>
       )}
+
+      <Toaster position="top-center" />
     </div>
   );
 };

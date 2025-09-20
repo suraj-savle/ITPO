@@ -130,40 +130,55 @@ export const getProfile = async (req, res) => {
 // @route PUT /api/auth/update-profile
 export const updateProfile = async (req, res) => {
   try {
-    const { name, email, phone, department, year, rollNo, cgpa, skills, coverLetter } = req.body;
-    
-    const updateData = {
-      name,
-      email,
-      phone,
-      department,
-      year,
-      rollNo,
-      cgpa: parseFloat(cgpa),
-      skills: typeof skills === 'string' ? JSON.parse(skills) : skills,
-      coverLetter
-    };
+    const userId = req.user._id; // from protect middleware
+    const updates = req.body;
 
-    if (req.file) {
-      updateData.resumeUrl = req.file.path;
+    // ✅ Prevent changing sensitive fields
+    const restrictedFields = ["password", "role", "email", "status", "reputationPoints", "profileCompletion"];
+    restrictedFields.forEach(field => delete updates[field]);
+
+    // ✅ If resume uploaded
+    if (req.files?.resume) {
+      user.resumeUrl = `/uploads/resumes/${req.files.resume[0].filename}`;
     }
 
+    if (req.files?.profileUrl) {
+      user.profileUrl = `/uploads/profile/${req.files.profileImage[0].filename}`;
+    }
+
+    // ✅ Ensure nested updates for socialLinks
+    if (updates.socialLinks) {
+      updates.socialLinks = {
+        linkedin: updates.socialLinks.linkedin || "",
+        github: updates.socialLinks.github || "",
+        portfolio: updates.socialLinks.portfolio || "",
+        twitter: updates.socialLinks.twitter || "",
+        leetcode: updates.socialLinks.leetcode || "",
+        codeforces: updates.socialLinks.codeforces || "",
+        hackerrank: updates.socialLinks.hackerrank || "",
+      };
+    }
+
+    // ✅ Update and re-run validators
     const user = await User.findByIdAndUpdate(
-      req.user.id,
-      updateData,
+      userId,
+      { $set: updates },
       { new: true, runValidators: true }
     );
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Recalculate profileCompletion & reputation
+    user.calculateProfileCompletion();
+    user.calculateReputation();
+    await user.save();
 
     res.json({
-      success: true,
       message: "Profile updated successfully",
       user: user.getPublicProfile(),
     });
-  } catch (err) {
-    res.status(500).json({ message: "Server Error", error: err.message });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
