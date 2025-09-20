@@ -1,30 +1,64 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+
+// Simple SVG icons
+const ChevronDownIcon = ({ className }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
+
+
 
 export default function Landing() {
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm py-4">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg"></div>
-            <span className="text-lg sm:text-xl font-bold text-indigo-600">InternConnect</span>
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${
+        scrollY > 50 ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
+      }`}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex justify-between items-center py-4">
+          <div className="flex items-center space-x-2 animate-fade-in">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg transform hover:rotate-12 transition-transform duration-300"></div>
+            <span className={`text-lg sm:text-xl font-bold transition-colors duration-300 ${
+              scrollY > 50 ? 'text-indigo-600' : 'text-white'
+            }`}>InternConnect</span>
           </div>
           <div className="hidden md:flex space-x-8">
-            <a href="#features" className="text-gray-600 hover:text-indigo-600">Features</a>
-            <a href="#how-it-works" className="text-gray-600 hover:text-indigo-600">How It Works</a>
-            <a href="#testimonials" className="text-gray-600 hover:text-indigo-600">Testimonials</a>
+            <a href="#features" className={`transition-all duration-300 hover:scale-105 ${
+              scrollY > 50 ? 'text-gray-600 hover:text-indigo-600' : 'text-white/90 hover:text-white'
+            }`}>Features</a>
+            <a href="#how-it-works" className={`transition-all duration-300 hover:scale-105 ${
+              scrollY > 50 ? 'text-gray-600 hover:text-indigo-600' : 'text-white/90 hover:text-white'
+            }`}>How It Works</a>
+            <a href="#contact" className={`transition-all duration-300 hover:scale-105 ${
+              scrollY > 50 ? 'text-gray-600 hover:text-indigo-600' : 'text-white/90 hover:text-white'
+            }`}>Contact</a>
           </div>
           <div className="flex space-x-2 sm:space-x-4">
             <Link
               to="/login"
-              className="px-3 sm:px-4 py-2 text-indigo-600 font-medium rounded-lg hover:bg-indigo-50 transition text-sm sm:text-base"
+              className={`px-3 sm:px-4 py-2 font-medium rounded-lg transition-all duration-300 hover:scale-105 text-sm sm:text-base ${
+                scrollY > 50 
+                  ? 'text-indigo-600 hover:bg-indigo-50' 
+                  : 'text-white hover:bg-white/10'
+              }`}
             >
               Sign In
             </Link>
             <Link
               to="/register"
-              className="px-3 sm:px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg shadow hover:bg-indigo-700 transition text-sm sm:text-base"
+              className="px-3 sm:px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm sm:text-base"
             >
               Register
             </Link>
@@ -33,71 +67,85 @@ export default function Landing() {
       </nav>
 
       {/* Hero Section */}
-      <header className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-600 text-white">
-        <div className="max-w-6xl mx-auto px-6 py-20 md:py-24 flex flex-col md:flex-row items-center">
-          <div className="md:w-1/2 mb-10 md:mb-0">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-              Transform Internship Hunting Into Career Building
+      <header className="relative min-h-screen bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-600 text-white overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-300/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-300/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
+        </div>
+        
+        <div className="relative max-w-6xl mx-auto px-6 pt-32 pb-20 flex flex-col md:flex-row items-center min-h-screen">
+          <div className="md:w-1/2 mb-10 md:mb-0 animate-fade-in-up">
+            <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium mb-6 animate-bounce-in">
+              🚀 Revolutionizing Campus Placements
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              Transform 
+              <span className="bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent animate-gradient">
+                Internship Hunting
+              </span>
+              <br />Into Career Building
             </h1>
-            <p className="text-lg md:text-xl mb-8 opacity-90">
+            <p className="text-lg md:text-xl mb-8 opacity-90 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
               A campus-centric platform that replaces the maze of PDFs, emails, and spreadsheets with a streamlined, transparent process for students, placement cells, and employers.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up" style={{animationDelay: '0.4s'}}>
               <Link
                 to="/register"
-                className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-xl shadow-lg hover:bg-gray-50 text-center transition"
+                className="group px-8 py-4 bg-white text-indigo-600 hover:text-white hover:bg-indigo-600 font-semibold rounded-xl shadow-lg hover:shadow-2xl text-center transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
               >
-                Get Started Free
+                <span className="flex items-center justify-center gap-2">
+                  Get Started Free
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
               </Link>
-              <a
-                href="#demo"
-                className="px-8 py-4 border border-white rounded-xl hover:bg-white hover:text-indigo-600 transition text-center"
-              >
-                Watch Demo
-              </a>
+
             </div>
-            <div className="mt-8 flex items-center text-sm opacity-80">
+            <div className="mt-8 flex items-center text-sm opacity-80 animate-fade-in-up" style={{animationDelay: '0.6s'}}>
               <div className="flex -space-x-2 mr-4">
-                <div className="w-8 h-8 rounded-full bg-indigo-500 border-2 border-white"></div>
-                <div className="w-8 h-8 rounded-full bg-purple-500 border-2 border-white"></div>
-                <div className="w-8 h-8 rounded-full bg-pink-500 border-2 border-white"></div>
+                <div className="w-8 h-8 rounded-full bg-indigo-500 border-2 border-white animate-bounce" style={{animationDelay: '0s'}}></div>
+                <div className="w-8 h-8 rounded-full bg-purple-500 border-2 border-white animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                <div className="w-8 h-8 rounded-full bg-pink-500 border-2 border-white animate-bounce" style={{animationDelay: '0.2s'}}></div>
               </div>
               <p>Join 10,000+ students from 50+ institutions</p>
             </div>
           </div>
-          <div className="md:w-1/2 flex justify-center">
+          <div className="md:w-1/2 flex justify-center animate-fade-in-right">
             <div className="relative w-full max-w-md">
-              <div className="absolute -top-6 -left-6 w-64 h-64 bg-white opacity-10 rounded-full"></div>
-              <div className="absolute -bottom-6 -right-6 w-64 h-64 bg-purple-300 opacity-10 rounded-full"></div>
-              <div className="relative bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 border border-white border-opacity-20 shadow-2xl">
+              <div className="absolute -top-6 -left-6 w-64 h-64 bg-white opacity-10 rounded-full animate-spin-slow"></div>
+              <div className="absolute -bottom-6 -right-6 w-64 h-64 bg-purple-300 opacity-10 rounded-full animate-spin-slow" style={{animationDirection: 'reverse'}}></div>
+              <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between animate-fade-in" style={{animationDelay: '0.8s'}}>
                     <div className="text-lg font-semibold">Dashboard Overview</div>
                     <div className="flex space-x-1">
-                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                      <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
+                      <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                      <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white bg-opacity-20 p-4 rounded-lg">
-                      <div className="text-2xl font-bold">87%</div>
+                    <div className="bg-white/20 p-4 rounded-lg hover:bg-white/30 transition-all duration-300 animate-fade-in" style={{animationDelay: '1s'}}>
+                      <div className="text-2xl font-bold counter" data-target="87">87%</div>
                       <div className="text-sm">Placement Rate</div>
                     </div>
-                    <div className="bg-white bg-opacity-20 p-4 rounded-lg">
+                    <div className="bg-white/20 p-4 rounded-lg hover:bg-white/30 transition-all duration-300 animate-fade-in" style={{animationDelay: '1.1s'}}>
                       <div className="text-2xl font-bold">1-Click</div>
                       <div className="text-sm">Applications</div>
                     </div>
-                    <div className="bg-white bg-opacity-20 p-4 rounded-lg">
+                    <div className="bg-white/20 p-4 rounded-lg hover:bg-white/30 transition-all duration-300 animate-fade-in" style={{animationDelay: '1.2s'}}>
                       <div className="text-2xl font-bold">24h</div>
                       <div className="text-sm">Avg. Response</div>
                     </div>
-                    <div className="bg-white bg-opacity-20 p-4 rounded-lg">
+                    <div className="bg-white/20 p-4 rounded-lg hover:bg-white/30 transition-all duration-300 animate-fade-in" style={{animationDelay: '1.3s'}}>
                       <div className="text-2xl font-bold">0</div>
                       <div className="text-sm">Paper Forms</div>
                     </div>
                   </div>
-                  <div className="bg-white text-indigo-600 p-3 rounded-lg text-sm font-medium">
+                  <div className="bg-white text-indigo-600 p-3 rounded-lg text-sm font-medium animate-fade-in" style={{animationDelay: '1.4s'}}>
                     🎯 Your perfect internship match is waiting!
                   </div>
                 </div>
@@ -105,347 +153,420 @@ export default function Landing() {
             </div>
           </div>
         </div>
+        
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <ChevronDownIcon className="w-6 h-6 text-white/70" />
+        </div>
       </header>
 
       {/* Stats Section */}
-      <section className="py-12 bg-indigo-50">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="stats" className="py-16 bg-gradient-to-r from-indigo-50 to-purple-50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div className="max-w-6xl mx-auto px-6 relative">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-indigo-600">50+</div>
-              <div className="text-gray-600">Partner Institutions</div>
+            <div className="group hover:scale-110 transition-transform duration-300">
+              <div className="text-4xl font-bold text-indigo-600 mb-2 counter" data-target="50">50+</div>
+              <div className="text-gray-600 group-hover:text-indigo-600 transition-colors">Partner Institutions</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-indigo-600">500+</div>
-              <div className="text-gray-600">Company Partners</div>
+            <div className="group hover:scale-110 transition-transform duration-300" style={{animationDelay: '0.1s'}}>
+              <div className="text-4xl font-bold text-indigo-600 mb-2 counter" data-target="500">500+</div>
+              <div className="text-gray-600 group-hover:text-indigo-600 transition-colors">Company Partners</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-indigo-600">10K+</div>
-              <div className="text-gray-600">Active Students</div>
+            <div className="group hover:scale-110 transition-transform duration-300" style={{animationDelay: '0.2s'}}>
+              <div className="text-4xl font-bold text-indigo-600 mb-2 counter" data-target="10000">10K+</div>
+              <div className="text-gray-600 group-hover:text-indigo-600 transition-colors">Active Students</div>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-indigo-600">5K+</div>
-              <div className="text-gray-600">Successful Placements</div>
+            <div className="group hover:scale-110 transition-transform duration-300" style={{animationDelay: '0.3s'}}>
+              <div className="text-4xl font-bold text-indigo-600 mb-2 counter" data-target="5000">5K+</div>
+              <div className="text-gray-600 group-hover:text-indigo-600 transition-colors">Successful Placements</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Streamline The Entire Internship Journey</h2>
-            <p className="text-gray-600">Our platform addresses the pain points of all stakeholders in the internship and placement process</p>
+      <section id="features" className="py-24 bg-gradient-to-br from-gray-50 via-white to-indigo-50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div className="max-w-7xl mx-auto px-6 relative">
+          <div className="text-center max-w-4xl mx-auto mb-20">
+            <div className="inline-block px-6 py-3 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full text-indigo-700 font-semibold text-sm mb-6">
+              🎯 Complete Solution
+            </div>
+            <h2 className="text-5xl md:text-6xl font-bold text-gray-800 mb-8 leading-tight">
+              Complete 
+              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient">
+                Campus Placement
+              </span>
+              <br />Ecosystem
+            </h2>
+            <p className="text-2xl text-gray-600 leading-relaxed">Connecting students, mentors, recruiters, and placement officers in one unified, intelligent platform</p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8">
             {/* Student Card */}
-            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-md transition border border-gray-100">
-              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+            <div className="group relative bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 border border-gray-100 transform hover:-translate-y-4 hover:rotate-1" style={{animationDelay: '0.1s'}}>
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-600/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-gray-800 group-hover:text-indigo-600 transition-colors">Students</h3>
+                <ul className="text-gray-600 space-y-3">
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Apply to internships</span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Track applications</span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Download certificates</span>
+                  </li>
+                </ul>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">For Students</h3>
-              <ul className="text-gray-600 space-y-2">
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </div>
+
+            {/* Mentors Card */}
+            <div className="group relative bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 border border-gray-100 transform hover:-translate-y-4 hover:-rotate-1" style={{animationDelay: '0.2s'}}>
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-600/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-500 shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
-                  <span>Single digital profile with auto-updating skills badge sheet</span>
-                </li>
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-gray-800 group-hover:text-purple-600 transition-colors">Mentors</h3>
+                <ul className="text-gray-600 space-y-3">
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Approve student requests</span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Give feedback</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Recruiters Card */}
+            <div className="group relative bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 border border-gray-100 transform hover:-translate-y-4 hover:rotate-1" style={{animationDelay: '0.3s'}}>
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-teal-600/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <span>Smart recommendations for best-fit roles</span>
-                </li>
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>One-click applications and real-time status tracking</span>
-                </li>
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Automated certificate generation and digital portfolio</span>
-                </li>
-              </ul>
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-gray-800 group-hover:text-green-600 transition-colors">Recruiters</h3>
+                <ul className="text-gray-600 space-y-3">
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Post jobs</span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Shortlist candidates</span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Schedule interviews</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* Placement Cell Card */}
-            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-md transition border border-gray-100">
-              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+            <div className="group relative bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 border border-gray-100 transform hover:-translate-y-4 hover:-rotate-1" style={{animationDelay: '0.4s'}}>
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-600/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-500 shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-gray-800 group-hover:text-orange-600 transition-colors">Placement Cell</h3>
+                <ul className="text-gray-600 space-y-3">
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Manage openings</span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Monitor analytics</span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
+                    <span className="font-medium">Generate certificates</span>
+                  </li>
+                </ul>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">For Placement Cells</h3>
-              <ul className="text-gray-600 space-y-2">
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Centralized dashboard with real-time analytics</span>
-                </li>
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Automated matching and eligibility verification</span>
-                </li>
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Streamlined approval workflows for faculty mentors</span>
-                </li>
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Comprehensive reporting for institutional accreditation</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Employer Card */}
-            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm hover:shadow-md transition border border-gray-100">
-              <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-800">For Employers</h3>
-              <ul className="text-gray-600 space-y-2">
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Direct access to pre-vetted, qualified candidates</span>
-                </li>
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Skills-based filtering and competency matching</span>
-                </li>
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Integrated interview scheduling and feedback system</span>
-                </li>
-                <li className="flex items-start">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Verifiable digital records and performance analytics</span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-16 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">How It Works</h2>
-            <p className="text-gray-600">Transforming the internship process from scattered chaos to streamlined efficiency</p>
+      <section id="how-it-works" className="py-24 bg-gradient-to-br from-indigo-50 via-white to-purple-50 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div className="max-w-7xl mx-auto px-6 relative">
+          <div className="text-center max-w-4xl mx-auto mb-20">
+            <div className="inline-block px-6 py-3 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-full text-purple-700 font-semibold text-sm mb-6">
+              ⚡ Simple Process
+            </div>
+            <h2 className="text-5xl md:text-6xl font-bold text-gray-800 mb-8 leading-tight">
+              How It 
+              <span className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent animate-gradient">
+                Works
+              </span>
+            </h2>
+            <p className="text-2xl text-gray-600 leading-relaxed">From registration to placement - a seamless journey in 4 simple steps</p>
           </div>
           
           <div className="grid md:grid-cols-4 gap-8 relative">
-            {/* Connecting line */}
-            <div className="hidden md:block absolute top-12 left-1/4 right-1/4 h-0.5 bg-indigo-200"></div>
+            {/* Animated connecting line */}
+            <div className="hidden md:block absolute top-16 left-1/4 right-1/4 h-1 bg-gradient-to-r from-indigo-200 via-purple-300 to-indigo-200 rounded-full opacity-60"></div>
             
             {/* Step 1 */}
-            <div className="text-center relative">
-              <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-4 relative z-10">1</div>
-              <h3 className="font-semibold text-lg mb-2">Create Profile</h3>
-              <p className="text-gray-600 text-sm">Students build a comprehensive digital profile with skills, credentials, and preferences</p>
+            <div className="group text-center relative">
+              <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-6 relative z-10 shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                1
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2">
+                <h3 className="font-bold text-xl mb-3 text-gray-800 group-hover:text-indigo-600 transition-colors">Create Profile</h3>
+                <p className="text-gray-600">Build comprehensive digital profile with skills and credentials</p>
+              </div>
             </div>
             
             {/* Step 2 */}
-            <div className="text-center relative">
-              <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-4 relative z-10">2</div>
-              <h3 className="font-semibold text-lg mb-2">Discover Opportunities</h3>
-              <p className="text-gray-600 text-sm">AI-powered matching recommends ideal roles based on skills and career goals</p>
+            <div className="group text-center relative">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-6 relative z-10 shadow-xl group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500">
+                2
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2">
+                <h3 className="font-bold text-xl mb-3 text-gray-800 group-hover:text-purple-600 transition-colors">Discover Opportunities</h3>
+                <p className="text-gray-600">Smart matching recommends ideal internship and training roles</p>
+              </div>
             </div>
             
             {/* Step 3 */}
-            <div className="text-center relative">
-              <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-4 relative z-10">3</div>
-              <h3 className="font-semibold text-lg mb-2">Apply & Track</h3>
-              <p className="text-gray-600 text-sm">One-click applications with real-time status updates throughout the process</p>
+            <div className="group text-center relative">
+              <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-6 relative z-10 shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                3
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2">
+                <h3 className="font-bold text-xl mb-3 text-gray-800 group-hover:text-pink-600 transition-colors">Apply & Track</h3>
+                <p className="text-gray-600">One-click applications with real-time status tracking</p>
+              </div>
             </div>
             
             {/* Step 4 */}
-            <div className="text-center relative">
-              <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl mx-auto mb-4 relative z-10">4</div>
-              <h3 className="font-semibold text-lg mb-2">Complete & Certify</h3>
-              <p className="text-gray-600 text-sm">Digital completion certificates and verifiable performance records</p>
+            <div className="group text-center relative">
+              <div className="w-20 h-20 bg-gradient-to-br from-rose-500 to-orange-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-6 relative z-10 shadow-xl group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500">
+                4
+              </div>
+              <div className="bg-white p-6 rounded-2xl shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2">
+                <h3 className="font-bold text-xl mb-3 text-gray-800 group-hover:text-orange-600 transition-colors">Complete & Certify</h3>
+                <p className="text-gray-600">Digital certificates and verifiable completion records</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">What Our Users Say</h2>
-            <p className="text-gray-600">Hear from students, placement officers, and employers who have transformed their internship processes</p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Testimonial 1 */}
-            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold mr-4">RS</div>
-                <div>
-                  <h4 className="font-semibold">Rahul Sharma</h4>
-                  <p className="text-sm text-gray-500">Computer Science Student</p>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">"The one-click application feature saved me countless hours. I applied to 15 companies in the time it used to take for just one!"</p>
-            </div>
-            
-            {/* Testimonial 2 */}
-            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold mr-4">PM</div>
-                <div>
-                  <h4 className="font-semibold">Priya Mehta</h4>
-                  <p className="text-sm text-gray-500">Placement Officer</p>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">"Our placement team has reduced administrative work by 70%. Now we can focus on building industry relationships instead of pushing paperwork."</p>
-            </div>
-            
-            {/* Testimonial 3 */}
-            <div className="bg-gray-50 p-6 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold mr-4">AT</div>
-                <div>
-                  <h4 className="font-semibold">Anil Thakur</h4>
-                  <p className="text-sm text-gray-500">HR Manager, TechSolutions Inc.</p>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">"The quality of candidates has improved dramatically. We're seeing better-matched applicants who actually have the skills we need."</p>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to Transform Your Internship Program?</h2>
-          <p className="text-lg mb-8 opacity-90">Join educational institutions across the country in streamlining internships and placements</p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+      <section className="py-24 bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-600 text-white relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-80 h-80 bg-purple-300/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        </div>
+        <div className="max-w-5xl mx-auto px-6 text-center relative">
+          <div className="inline-block px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full text-white font-semibold text-sm mb-8 animate-bounce-in">
+            🚀 Transform Your Institution
+          </div>
+          <h2 className="text-5xl md:text-6xl font-bold mb-8 leading-tight">
+            Ready to Transform Your 
+            <span className="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent animate-gradient">
+              Campus Placement
+            </span>
+            <br />Program?
+          </h2>
+          <p className="text-2xl mb-12 opacity-90 max-w-3xl mx-auto leading-relaxed">Join technical institutions across India in revolutionizing industrial training and campus placements</p>
+          
+          <div className="flex flex-col sm:flex-row justify-center gap-6 mb-12">
             <Link
               to="/register"
-              className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-xl shadow-lg hover:bg-gray-100 transition"
+              className="group px-10 py-5 bg-white text-indigo-600 hover:text-white hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 font-bold text-lg rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-1"
             >
-              Get Started Now
+              <span className="flex items-center justify-center gap-3">
+                Get Started Now
+                <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
             </Link>
-            <a
-              href="#demo"
-              className="px-8 py-4 border border-white rounded-xl hover:bg-white hover:text-indigo-600 transition"
-            >
-              Schedule a Demo
-            </a>
           </div>
-          <p className="mt-6 text-sm opacity-80">Free for educational institutions. No credit card required.</p>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Frequently Asked Questions</h2>
           
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm">
-              <h3 className="font-semibold text-lg mb-2">Is the platform really free for educational institutions?</h3>
-              <p className="text-gray-600">Yes, our core platform is completely free for public educational institutions. We believe in supporting technical education and only charge corporate partners for premium recruitment features.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-white/80">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">Free for technical institutions</span>
             </div>
-            
-            <div className="bg-white p-6 rounded-2xl shadow-sm">
-              <h3 className="font-semibold text-lg mb-2">How does the recommendation engine work?</h3>
-              <p className="text-gray-600">Our AI analyzes student skills, preferences, and past successful placements to recommend the most suitable opportunities. It considers technical competencies, stipend expectations, company culture, and location preferences.</p>
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">AICTE compliant</span>
             </div>
-            
-            <div className="bg-white p-6 rounded-2xl shadow-sm">
-              <h3 className="font-semibold text-lg mb-2">How long does implementation take?</h3>
-              <p className="text-gray-600">Most institutions are fully operational within 2-3 weeks. We provide dedicated onboarding support, data migration assistance, and training resources to ensure a smooth transition.</p>
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">No credit card required</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-12 bg-white">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Start Your Journey Toward Effortless Internships</h2>
-          <Link
-            to="/register"
-            className="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow hover:bg-indigo-700 inline-block"
-          >
-            Create Your Account
-          </Link>
+      {/* Benefits Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-800 mb-6">Why Choose Our Platform</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Built specifically for technical institutions to streamline the entire placement process</p>
+          </div>
+          
+          <div className="grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-6">
+            <div className="group bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-2xl hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">One-click applications</h3>
+              <p className="text-sm text-gray-600">Apply instantly with saved profiles</p>
+            </div>
+
+            <div className="group bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-2xl hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Automated mentor approval</h3>
+              <p className="text-sm text-gray-600">Streamlined faculty workflows</p>
+            </div>
+
+            <div className="group bg-gradient-to-br from-purple-50 to-pink-100 p-6 rounded-2xl hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Interview scheduling sync</h3>
+              <p className="text-sm text-gray-600">Seamless coordination</p>
+            </div>
+
+            <div className="group bg-gradient-to-br from-yellow-50 to-orange-100 p-6 rounded-2xl hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Digital certificates & analytics</h3>
+              <p className="text-sm text-gray-600">Automated tracking & reports</p>
+            </div>
+
+            <div className="group bg-gradient-to-br from-red-50 to-rose-100 p-6 rounded-2xl hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Secure, campus-controlled</h3>
+              <p className="text-sm text-gray-600">Complete data security</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="py-20 bg-gradient-to-br from-slate-50 to-gray-100">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-800 mb-4">Connect With Us</h2>
+            <p className="text-xl text-gray-600">Ready to transform your campus placement process?</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="group bg-white p-8 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">Email Us</h3>
+              <div className="text-center space-y-2">
+                <p className="text-gray-600 font-medium">placement@itpo.edu.in</p>
+                <p className="text-gray-600 font-medium">support@itpo.edu.in</p>
+              </div>
+            </div>
+            <div className="group bg-white p-8 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">Call Us</h3>
+              <div className="text-center space-y-2">
+                <p className="text-gray-600 font-medium">+91 98765 43210</p>
+                <p className="text-gray-600 font-medium">+91 87654 32109</p>
+              </div>
+            </div>
+            <div className="group bg-white p-8 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">Visit Us</h3>
+              <div className="text-center space-y-2">
+                <p className="text-gray-600 font-medium">Industrial Training & Placement Office</p>
+                <p className="text-gray-600 font-medium">Bengaluru, Karnataka 560001</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-gray-300 py-12">
+      <footer className="bg-gray-900 text-gray-300 py-8">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-indigo-500 rounded-lg"></div>
-                <span className="text-xl font-bold text-white">InternConnect</span>
-              </div>
-              <p className="text-sm">Making internship hunting transparent, efficient, and rewarding for all stakeholders in technical education.</p>
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-2 mb-4 md:mb-0">
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg"></div>
+              <span className="text-xl font-bold text-white">InternConnect</span>
             </div>
             
-            <div>
-              <h4 className="text-white font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#features" className="hover:text-white transition">Features</a></li>
-                <li><a href="#how-it-works" className="hover:text-white transition">How It Works</a></li>
-                <li><a href="#testimonials" className="hover:text-white transition">Testimonials</a></li>
-                <li><a href="#" className="hover:text-white transition">Pricing</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-white font-semibold mb-4">Resources</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white transition">Documentation</a></li>
-                <li><a href="#" className="hover:text-white transition">API</a></li>
-                <li><a href="#" className="hover:text-white transition">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition">Privacy Policy</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-white font-semibold mb-4">Contact Us</h4>
-              <ul className="space-y-2 text-sm">
-                <li>support@internconnect.edu</li>
-                <li>+91 98765 43210</li>
-                <li>Tech Education Campus, Bengaluru</li>
-              </ul>
+            <div className="flex space-x-6 text-sm">
+              <a href="#features" className="hover:text-white transition">Features</a>
+              <a href="#how-it-works" className="hover:text-white transition">How It Works</a>
+              <a href="#contact" className="hover:text-white transition">Contact</a>
+              <a href="#" className="hover:text-white transition">Privacy Policy</a>
             </div>
           </div>
           
-          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm">
-            <p>© {new Date().getFullYear()} InternConnect. All Rights Reserved. Built for technical education institutions across India.</p>
+          <div className="border-t border-gray-700 mt-6 pt-6 text-center text-sm">
+            <p>© {new Date().getFullYear()} InternConnect. Industrial Training & Placement Management System for Technical Institutions.</p>
           </div>
         </div>
       </footer>
