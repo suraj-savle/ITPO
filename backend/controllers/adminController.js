@@ -78,7 +78,26 @@ export const approveStudent = async (req, res) => {
   try {
     const { mentorId } = req.body;
     
-    const student = await User.findByIdAndUpdate(
+    // Get student details
+    const student = await User.findById(req.params.id);
+    if (!student) return res.status(404).json({ message: "Student not found" });
+    
+    // If mentor is assigned, validate they are from the same department
+    if (mentorId) {
+      const mentor = await User.findOne({ 
+        _id: mentorId, 
+        role: "mentor", 
+        department: student.department 
+      });
+      
+      if (!mentor) {
+        return res.status(400).json({ 
+          message: "Mentor must be from the same department as the student" 
+        });
+      }
+    }
+    
+    const updatedStudent = await User.findByIdAndUpdate(
       req.params.id,
       { 
         status: "active",
@@ -87,12 +106,10 @@ export const approveStudent = async (req, res) => {
       { new: true }
     );
 
-    if (!student) return res.status(404).json({ message: "Student not found" });
-
     res.json({
       success: true,
       message: "Student approved successfully",
-      student: student.getPublicProfile()
+      student: updatedStudent.getPublicProfile()
     });
   } catch (err) {
     res.status(500).json({ message: "Server Error", error: err.message });
@@ -128,8 +145,39 @@ export const getAllUsers = async (req, res) => {
 
 export const getMentors = async (req, res) => {
   try {
-    const mentors = await User.find({ role: "mentor" }).select("name email department");
+    const { department } = req.query;
+    const filter = { role: "mentor" };
+    
+    if (department) {
+      filter.department = department;
+    }
+    
+    const mentors = await User.find(filter).select("name email department");
     res.json({ success: true, mentors });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
+
+export const assignMentorToStudent = async (req, res) => {
+  try {
+    const { studentId, mentorId } = req.body;
+    
+    const student = await User.findByIdAndUpdate(
+      studentId,
+      { assignedMentor: mentorId },
+      { new: true }
+    );
+    
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    
+    res.json({
+      success: true,
+      message: "Mentor assigned successfully",
+      student: student.getPublicProfile()
+    });
   } catch (err) {
     res.status(500).json({ message: "Server Error", error: err.message });
   }

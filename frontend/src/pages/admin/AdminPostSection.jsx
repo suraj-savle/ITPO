@@ -3,7 +3,9 @@ import toast, { Toaster } from "react-hot-toast";
 
 const AdminPostSection = () => {
   const [posts, setPosts] = useState([]);
+  const [postHistory, setPostHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     company: "",
@@ -32,8 +34,24 @@ const AdminPostSection = () => {
     }
   };
 
+  const fetchPostHistory = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch("http://localhost:5000/api/admin/post-history", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch post history");
+      const data = await res.json();
+      setPostHistory(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load post history");
+    }
+  };
+
   useEffect(() => {
     fetchPosts();
+    fetchPostHistory();
   }, []);
 
   const handleInputChange = (e) => {
@@ -66,6 +84,7 @@ const AdminPostSection = () => {
         applyLink: "",
       });
       fetchPosts();
+      fetchPostHistory();
     } catch (err) {
       console.error(err);
       toast.error("Failed to create post");
@@ -76,7 +95,15 @@ const AdminPostSection = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Job / Internship Posts</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Job / Internship Posts</h1>
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          {showHistory ? "Show Active Posts" : "Show Post History"}
+        </button>
+      </div>
 
       {/* Admin Create Post Form */}
       <form onSubmit={handlePostSubmit} className="bg-white p-6 rounded-2xl shadow-md mb-8 space-y-4 border border-gray-200">
@@ -169,7 +196,7 @@ const AdminPostSection = () => {
 
       {/* List of Posts */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {posts.map((post) => (
+        {(showHistory ? postHistory : posts).map((post) => (
           <div key={post._id} className="bg-white rounded-2xl shadow-md p-5 border border-gray-100 hover:shadow-xl transition-shadow duration-300">
             <h3 className="text-lg font-semibold text-gray-800">{post.title}</h3>
             <p className="text-gray-500 text-sm">{post.company} • {post.type}</p>
@@ -177,6 +204,7 @@ const AdminPostSection = () => {
             <p className="text-gray-600 mt-1 text-xs">Requirements: {post.requirements || "N/A"}</p>
             <p className="text-gray-600 mt-1 text-xs">Location: {post.location || "Remote"}</p>
             <p className="text-gray-600 mt-1 text-xs">Stipend/Package: {post.stipend || "N/A"}</p>
+            <p className="text-gray-600 mt-1 text-xs">Created: {new Date(post.createdAt).toLocaleDateString()}</p>
             {post.applyLink && (
               <a
                 href={post.applyLink}

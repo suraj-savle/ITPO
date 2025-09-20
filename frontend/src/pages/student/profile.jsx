@@ -137,29 +137,59 @@ const Profile = () => {
     }
 
     try {
-      const formToSend = new FormData();
-      Object.keys(formData).forEach((key) => {
-        if (["skills", "socialLinks", "projects", "experiences"].includes(key))
-          formToSend.append(key, JSON.stringify(formData[key]));
-        else formToSend.append(key, formData[key]);
-      });
-      if (resume) formToSend.append("resume", resume);
+      // Create update data object
+      const updateData = {
+        name: formData.name,
+        phone: formData.phone,
+        department: formData.department,
+        year: formData.year,
+        cgpa: formData.cgpa,
+        description: formData.description,
+        skills: Array.isArray(formData.skills) ? formData.skills : [],
+        socialLinks: formData.socialLinks || {},
+        projects: Array.isArray(formData.projects) ? formData.projects : [],
+        experiences: Array.isArray(formData.experiences) ? formData.experiences : [],
+        course: formData.course,
+        specialization: formData.specialization,
+        backlogs: formData.backlogs
+      };
+
+      console.log('Sending update data:', updateData);
 
       const res = await fetch("http://localhost:5000/api/student/update-profile", {
         method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formToSend,
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData),
       });
 
-      if (!res.ok) throw new Error("Update failed");
       const data = await res.json();
-      if (data.success) {
-        toast.success("Profile updated successfully!");
-        setIsEditing(false);
-      } else throw new Error(data.message || "Update failed");
+      
+      if (!res.ok) {
+        console.error('Server error:', data);
+        throw new Error(data.message || 'Update failed');
+      }
+
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+      
+      // Refresh profile data
+      const updatedProfileRes = await fetch("http://localhost:5000/api/student/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (!updatedProfileRes.ok) {
+        throw new Error("Failed to fetch updated profile");
+      }
+      
+      const updatedProfile = await updatedProfileRes.json();
+      setFormData(prev => ({ ...prev, ...updatedProfile }));
+      
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to update profile. Please try again.");
+      console.error('Profile update error:', err);
+      toast.error(err.message || "Failed to update profile. Please try again.");
     }
   };
 

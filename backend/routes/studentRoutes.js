@@ -18,14 +18,22 @@ router.get("/profile", protect, studentOnly, async (req, res) => {
   }
 });
 
+// Update profile with file upload support
 router.put(
   "/update-profile",
   protect,
   studentOnly,
-  upload.fields([
-    { name: "resume", maxCount: 1 },
-    { name: "profile", maxCount: 1 }
-  ]), // handle resume upload
+  async (req, res, next) => {
+    try {
+      console.log('Update Profile Request:', {
+        body: req.body,
+        userId: req.user._id
+      });
+      next();
+    } catch (error) {
+      next(error);
+    }
+  },
   updateProfile
 );
 

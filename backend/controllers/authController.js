@@ -130,20 +130,35 @@ export const getProfile = async (req, res) => {
 // @route PUT /api/auth/update-profile
 export const updateProfile = async (req, res) => {
   try {
-    const userId = req.user._id; // from protect middleware
-    const updates = req.body;
+    const userId = req.user._id;
+    console.log('Received update request for user:', userId);
+    console.log('Update data:', req.body);
 
-    // ✅ Prevent changing sensitive fields
-    const restrictedFields = ["password", "role", "email", "status", "reputationPoints", "profileCompletion"];
-    restrictedFields.forEach(field => delete updates[field]);
-
-    // ✅ If resume uploaded
-    if (req.files?.resume) {
-      user.resumeUrl = `/uploads/resumes/${req.files.resume[0].filename}`;
+    // Find user first
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    if (req.files?.profileUrl) {
-      user.profileUrl = `/uploads/profile/${req.files.profileImage[0].filename}`;
+    // List of fields that can be updated
+    const allowedFields = [
+      'name', 'phone', 'department', 'year', 'cgpa', 
+      'description', 'skills', 'socialLinks', 'projects', 
+      'experiences', 'course', 'specialization', 'backlogs'
+    ];
+
+    // Update only allowed fields
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        // Handle special cases
+        if (field === 'cgpa') {
+          user[field] = parseFloat(req.body[field]) || 0;
+        } else if (field === 'backlogs') {
+          user[field] = parseInt(req.body[field]) || 0;
+        } else {
+          user[field] = req.body[field];
+        }
+      }
     }
 
     // ✅ Ensure nested updates for socialLinks
@@ -159,26 +174,53 @@ export const updateProfile = async (req, res) => {
       };
     }
 
-    // ✅ Update and re-run validators
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: updates },
-      { new: true, runValidators: true }
-    );
+    try {
+      // Save the updated user
+      await user.save();
+      console.log('User profile updated successfully');
 
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    // Recalculate profileCompletion & reputation
-    user.calculateProfileCompletion();
-    user.calculateReputation();
-    await user.save();
-
-    res.json({
-      message: "Profile updated successfully",
-      user: user.getPublicProfile(),
-    });
+      // Send back the updated user data
+      res.json({
+        message: "Profile updated successfully",
+        user: {
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          department: user.department,
+          year: user.year,
+          rollNo: user.rollNo,
+          cgpa: user.cgpa,
+          description: user.description,
+          skills: user.skills,
+          socialLinks: user.socialLinks,
+          projects: user.projects,
+          experiences: user.experiences,
+          course: user.course,
+          specialization: user.specialization,
+          backlogs: user.backlogs
+        }
+      });
+    } catch (saveError) {
+      console.error('Error saving user:', saveError);
+      
+      // Check for validation errors
+      if (saveError.name === 'ValidationError') {
+        return res.status(400).json({
+          message: "Validation error",
+          errors: Object.keys(saveError.errors).reduce((acc, key) => {
+            acc[key] = saveError.errors[key].message;
+            return acc;
+          }, {})
+        });
+      }
+      
+      throw saveError;
+    }
   } catch (error) {
     console.error("Update Profile Error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ 
+      message: "Failed to update profile",
+      error: error.message 
+    });
   }
 };

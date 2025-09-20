@@ -1,34 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, X, MessageSquare, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Approvals = () => {
-  const [applications, setApplications] = useState([
-    {
-      id: 1,
-      studentName: 'John Doe',
-      studentEmail: 'john.doe@university.edu',
-      jobTitle: 'Software Development Intern',
-      company: 'TechCorp',
-      appliedDate: '2024-01-20',
-      status: 'pending',
-      studentYear: '3rd Year',
-      resumeUrl: '#',
-      coverLetter: 'I am passionate about software development...'
-    },
-    {
-      id: 2,
-      studentName: 'Sarah Smith',
-      studentEmail: 'sarah.smith@university.edu',
-      jobTitle: 'Data Science Intern',
-      company: 'DataSoft',
-      appliedDate: '2024-01-19',
-      status: 'pending',
-      studentYear: '4th Year',
-      resumeUrl: '#',
-      coverLetter: 'My experience with machine learning...'
-    }
-  ]);
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchPendingApplications = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost:5000/api/mentor/pending-applications', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem('token');
+            navigate('/login');
+            return;
+          }
+          throw new Error('Failed to fetch pending applications');
+        }
+
+        const data = await res.json();
+        setApplications(data.applications || []);
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to load pending applications');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPendingApplications();
+  }, [navigate]);
 
   const [selectedApp, setSelectedApp] = useState(null);
   const [comment, setComment] = useState('');
@@ -67,26 +80,29 @@ const Approvals = () => {
     setShowModal(true);
   };
 
-  const pendingApps = applications.filter(app => app.status === 'pending');
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">Loading pending applications...</div>;
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Pending Approvals</h1>
         <div className="text-sm text-gray-600">
-          {pendingApps.length} applications waiting
+          {applications.length} applications waiting
         </div>
       </div>
 
       <div className="space-y-4">
-        {pendingApps.map((app) => (
-          <div key={app.id} className="bg-white rounded-lg shadow p-6">
+        {applications.map((app) => (
+          <div key={app._id} className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="font-semibold text-lg">{app.studentName}</h3>
-                <p className="text-gray-600">{app.studentEmail} • {app.studentYear}</p>
+                <h3 className="font-semibold text-lg">{app.studentId?.name}</h3>
+                <p className="text-gray-600">{app.studentId?.email} • {app.studentId?.year}</p>
+                <p className="text-gray-500 text-sm">Roll No: {app.studentId?.rollNo} • {app.studentId?.department}</p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Applied for <span className="font-medium">{app.jobTitle}</span> at <span className="font-medium">{app.company}</span>
+                  Applied for <span className="font-medium">{app.jobId?.title}</span> at <span className="font-medium">{app.jobId?.company}</span>
                 </p>
               </div>
               <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
@@ -94,16 +110,18 @@ const Approvals = () => {
               </span>
             </div>
 
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">Cover Letter:</p>
-              <p className="text-sm bg-gray-50 p-3 rounded italic">
-                "{app.coverLetter}"
-              </p>
-            </div>
+            {app.coverLetter && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Cover Letter:</p>
+                <p className="text-sm bg-gray-50 p-3 rounded italic">
+                  "{app.coverLetter}"
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-between items-center">
               <div className="text-sm text-gray-500">
-                Applied on {new Date(app.appliedDate).toLocaleDateString()}
+                Applied on {new Date(app.createdAt).toLocaleDateString()}
               </div>
               
               <div className="flex gap-2">
@@ -131,7 +149,7 @@ const Approvals = () => {
         ))}
       </div>
 
-      {pendingApps.length === 0 && (
+      {applications.length === 0 && (
         <div className="text-center py-12">
           <div className="text-gray-400 text-6xl mb-4">✅</div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">All caught up!</h3>
@@ -147,7 +165,7 @@ const Approvals = () => {
               {actionType === 'approve' ? 'Approve Application' : 'Reject Application'}
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              {selectedApp?.studentName} - {selectedApp?.jobTitle}
+              {selectedApp?.studentId?.name} - {selectedApp?.jobId?.title}
             </p>
             
             <textarea
@@ -166,7 +184,7 @@ const Approvals = () => {
                 Cancel
               </button>
               <button
-                onClick={() => actionType === 'approve' ? handleApprove(selectedApp.id) : handleReject(selectedApp.id)}
+                onClick={() => actionType === 'approve' ? handleApprove(selectedApp._id) : handleReject(selectedApp._id)}
                 className={`px-4 py-2 text-white rounded-md ${
                   actionType === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
                 }`}

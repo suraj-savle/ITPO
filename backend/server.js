@@ -6,6 +6,8 @@ import studentRoutes from "./routes/studentRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import recruiterRoutes from "./routes/recruiterRoutes.js";
+import mentorRoutes from "./routes/mentorRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 
 dotenv.config();
@@ -69,6 +71,58 @@ app.get('/api/debug/registered-emails', async (req, res) => {
   }
 });
 
+// Debug route to check mentor assignments
+app.get('/api/debug/mentor-assignments', async (req, res) => {
+  try {
+    const User = (await import('./models/UserModel.js')).default;
+    const students = await User.find({ role: 'student' })
+      .populate('assignedMentor', 'name email department')
+      .select('name email department year rollNo status assignedMentor');
+    
+    const mentors = await User.find({ role: 'mentor' })
+      .select('name email department');
+    
+    res.json({ 
+      students: students.map(s => ({
+        _id: s._id,
+        name: s.name,
+        email: s.email,
+        department: s.department,
+        year: s.year,
+        rollNo: s.rollNo,
+        status: s.status,
+        assignedMentor: s.assignedMentor
+      })),
+      mentors: mentors.map(m => ({
+        _id: m._id,
+        name: m.name,
+        email: m.email,
+        department: m.department
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Quick assign mentor endpoint for testing
+app.post('/api/debug/assign-mentor', async (req, res) => {
+  try {
+    const { studentId, mentorId } = req.body;
+    const User = (await import('./models/UserModel.js')).default;
+    
+    const student = await User.findByIdAndUpdate(
+      studentId,
+      { assignedMentor: mentorId },
+      { new: true }
+    );
+    
+    res.json({ success: true, student });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Debug route to check database contents (remove in production)
 app.get('/api/debug/users', async (req, res) => {
   try {
@@ -92,6 +146,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/recruiter", recruiterRoutes);
+app.use("/api/mentor", mentorRoutes);
+app.use("/api/jobs", jobRoutes);
 
 app.use("/api", postRoutes);
 

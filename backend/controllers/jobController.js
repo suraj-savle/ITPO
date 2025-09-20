@@ -43,8 +43,18 @@ export const createJob = async (req, res) => {
 
 export const applyForJob = async (req, res) => {
   try {
+    console.log('Apply for job request:', {
+      jobId: req.params.id,
+      userId: req.user?._id,
+      userRole: req.user?.role
+    });
+
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
     const jobId = req.params.id;
-    const studentId = req.user.id;
+    const studentId = req.user._id;
 
     const existingApplication = await Application.findOne({ studentId, jobId });
     if (existingApplication) {
@@ -53,10 +63,12 @@ export const applyForJob = async (req, res) => {
 
     const application = new Application({
       studentId,
-      jobId
+      jobId,
+      status: 'applied'
     });
 
     await application.save();
+    console.log('Application saved:', application);
 
     res.status(201).json({
       success: true,
@@ -64,6 +76,7 @@ export const applyForJob = async (req, res) => {
       application
     });
   } catch (err) {
+    console.error('Job application error:', err);
     res.status(500).json({ message: "Server Error", error: err.message });
   }
 };
