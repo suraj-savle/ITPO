@@ -17,10 +17,7 @@ import {
 
 const DashboardLayout = ({ userRole = "student" }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notifications] = useState([
-    { id: 1, text: "New job posted", time: "1h ago" },
-    { id: 2, text: "Profile approved", time: "3h ago" },
-  ]);
+  
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -147,28 +144,7 @@ const DashboardLayout = ({ userRole = "student" }) => {
 
         <div className="flex items-center gap-4">
           {/* Notifications */}
-          <div className="relative">
-            <button className="p-2 rounded-lg hover:bg-gray-100 transition relative">
-              <Bell className="w-6 h-6 text-gray-600" />
-              {notifications.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold animate-pulse">
-                  {notifications.length}
-                </span>
-              )}
-            </button>
-            {/* Notification dropdown */}
-            <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-xl overflow-hidden opacity-0 pointer-events-none transition-all group-hover:opacity-100">
-              {notifications.map((n) => (
-                <div
-                  key={n.id}
-                  className="px-4 py-2 hover:bg-gray-50 transition"
-                >
-                  <p className="text-sm text-gray-700">{n.text}</p>
-                  <span className="text-xs text-gray-400">{n.time}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          
 
           {/* User Info */}
           <div className="flex items-center gap-2">
