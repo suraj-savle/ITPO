@@ -28,22 +28,42 @@ const DashboardLayout = ({ userRole = "student" }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const res = await fetch("http://localhost:5000/api/auth/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setUserData(data.user || data.student);
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          const user = data.user || data.student;
+          
+          // Validate user role matches expected role
+          if (user.role !== userRole) {
+            console.error(`Role mismatch: expected ${userRole}, got ${user.role}`);
+            localStorage.removeItem("token");
+            navigate("/login");
+            return;
           }
-        } catch (error) {
-          console.error("Failed to fetch user data:", error);
+          
+          setUserData(user);
+        } else {
+          console.error("Failed to fetch profile");
+          localStorage.removeItem("token");
+          navigate("/login");
         }
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        localStorage.removeItem("token");
+        navigate("/login");
       }
     };
     fetchUserData();
-  }, []);
+  }, [userRole, navigate]);
 
   const menuConfig = {
     student: {
@@ -77,11 +97,11 @@ const DashboardLayout = ({ userRole = "student" }) => {
       ],
     },
     recruiter: {
-      title: "Student Connect - recruiter",
+      title: "Recruiter Portal",
       items: [
-        { path: "/recruiter", label: "My Mentees", icon: Users },
-        { path: "/recruiter/students", label: "Student", icon: Users },
-        { path: "/recruiter/post", label: "Posts", icon: Briefcase },
+        { path: "/recruiter", label: "Dashboard", icon: BarChart3 },
+        { path: "/recruiter/students", label: "Students", icon: Users },
+        { path: "/recruiter/post", label: "Job Posts", icon: Briefcase },
       ],
     },
     admin: {

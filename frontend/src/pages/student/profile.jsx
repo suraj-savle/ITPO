@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { handleAuthError, makeAuthenticatedRequest, isTokenValid } from "../../utils/auth";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -37,6 +38,18 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [resume, setResume] = useState(null);
   const [resumePreview, setResumePreview] = useState("");
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+
+  const avatarOptions = [
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=5',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=8'
+  ];
 
   // Initialize formData with proper structure
   const [formData, setFormData] = useState({
@@ -77,34 +90,36 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
+      if (!isTokenValid()) {
+        handleAuthError(navigate);
         return;
       }
 
       try {
-        const res = await fetch("http://localhost:5000/api/student/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!res.ok) {
-          if (res.status === 401) {
-            localStorage.removeItem("token");
-            navigate("/login");
-            return;
-          }
-          throw new Error("Failed to fetch profile");
-        }
+        const res = await makeAuthenticatedRequest(
+          "http://localhost:5000/api/student/profile",
+          {},
+          navigate
+        );
 
         const data = await res.json();
         if (data) {
-          setFormData((prev) => ({ ...prev, ...data }));
+          const updatedData = {
+            ...data,
+            skills: Array.isArray(data.skills) ? data.skills : [],
+            projects: Array.isArray(data.projects) ? data.projects : [],
+            experiences: Array.isArray(data.experiences) ? data.experiences : [],
+            profileCompletion: calculateProfileCompletion(data),
+            reputationPoints: calculateProfileCompletion(data)
+          };
+          setFormData((prev) => ({ ...prev, ...updatedData }));
           if (data.resumeUrl) setResumePreview(data.resumeUrl);
         }
       } catch (err) {
-        console.error(err);
-        toast.error("Failed to load profile");
+        console.error("Profile fetch error:", err);
+        if (!err.message.includes("Authentication")) {
+          toast.error("Failed to load profile");
+        }
       } finally {
         setLoading(false);
       }
@@ -129,15 +144,12 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Please login again");
-      navigate("/login");
+    if (!isTokenValid()) {
+      handleAuthError(navigate);
       return;
     }
 
     try {
-      // Create update data object
       const updateData = {
         name: formData.name,
         phone: formData.phone,
@@ -151,173 +163,263 @@ const Profile = () => {
         experiences: Array.isArray(formData.experiences) ? formData.experiences : [],
         course: formData.course,
         specialization: formData.specialization,
-        backlogs: formData.backlogs
+        backlogs: formData.backlogs,
+        profileImage: formData.profileImage,
+        resumeUrl: formData.resumeUrl
       };
 
-      console.log('Sending update data:', updateData);
-
-      const res = await fetch("http://localhost:5000/api/student/update-profile", {
-        method: "PUT",
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const res = await makeAuthenticatedRequest(
+        "http://localhost:5000/api/student/update-profile",
+        {
+          method: "PUT",
+          body: JSON.stringify(updateData),
         },
-        body: JSON.stringify(updateData),
-      });
+        navigate
+      );
 
       const data = await res.json();
-      
-      if (!res.ok) {
-        console.error('Server error:', data);
-        throw new Error(data.message || 'Update failed');
-      }
-
       toast.success("Profile updated successfully!");
       setIsEditing(false);
       
-      // Refresh profile data
-      const updatedProfileRes = await fetch("http://localhost:5000/api/student/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      if (!updatedProfileRes.ok) {
-        throw new Error("Failed to fetch updated profile");
+      if (data.user) {
+        const updatedData = {
+          ...data.user,
+          profileCompletion: calculateProfileCompletion(data.user),
+          reputationPoints: calculateProfileCompletion(data.user),
+          resumeUrl: resumePreview || data.user.resumeUrl
+        };
+        setFormData(updatedData);
       }
-      
-      const updatedProfile = await updatedProfileRes.json();
-      setFormData(prev => ({ ...prev, ...updatedProfile }));
       
     } catch (err) {
       console.error('Profile update error:', err);
-      toast.error(err.message || "Failed to update profile. Please try again.");
+      if (!err.message.includes("Authentication")) {
+        toast.error("Failed to update profile. Please try again.");
+      }
     }
+  };
+
+  const calculateProfileCompletion = (data) => {
+    const fields = [
+      data.name, data.email, data.phone, data.department, data.year,
+      data.rollNo, data.cgpa, data.description, data.course, data.specialization
+    ];
+    const arrays = [data.skills, data.projects, data.experiences];
+    const socialLinks = Object.values(data.socialLinks || {}).filter(Boolean);
+    
+    const basicFields = fields.filter(Boolean).length;
+    const arrayFields = arrays.filter(arr => arr && arr.length > 0).length;
+    const socialCount = socialLinks.length > 0 ? 1 : 0;
+    const resumeCount = data.resumeUrl ? 1 : 0;
+    
+    const total = 10 + 3 + 1 + 1; // 10 basic + 3 arrays + 1 social + 1 resume
+    const completed = basicFields + arrayFields + socialCount + resumeCount;
+    
+    return Math.round((completed / total) * 100);
   };
 
   const handleResumeChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setResume(file);
-      setResumePreview(URL.createObjectURL(file));
+      const fileUrl = URL.createObjectURL(file);
+      setResumePreview(fileUrl);
+      setFormData(prev => ({ ...prev, resumeUrl: fileUrl }));
     }
   };
 
   if (loading) return <div className="flex items-center justify-center h-64">Loading...</div>;
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6">
-      {/* Header with Edit Button */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-        {isEditing ? (
-          <div className="flex gap-2">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
+        {/* Modern Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              My Profile
+            </h1>
+            <p className="text-gray-600 mt-1">Manage your personal information and preferences</p>
+          </div>
+          {isEditing ? (
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all duration-200 shadow-lg font-medium"
+              >
+                <Save size={20} />
+                Save Changes
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={() => setIsEditing(false)}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsEditing(true)}
+              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all duration-200 shadow-lg font-medium"
+            >
+              <Edit3 size={20} />
+              Edit Profile
+            </button>
+          )}
+        </div>
+
+      {/* Modern Profile Card */}
+      <div className="relative bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-3xl shadow-2xl p-8 text-white mb-8 overflow-hidden">
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+        <div className="relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-8">
+            {/* Avatar Section */}
+            <div className="relative group">
+              <div className="relative">
+                <img
+                  src={formData.profileImage || avatarOptions[0]}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-white/40 shadow-2xl transition-transform group-hover:scale-105"
+                />
+                {formData.status === "active" && (
+                  <div className="absolute -bottom-2 -right-2 bg-green-400 p-2 rounded-full border-3 border-white shadow-lg">
+                    <div className="w-4 h-4 rounded-full bg-white animate-pulse"></div>
+                  </div>
+                )}
+                {isEditing && (
+                  <button
+                    onClick={() => setShowAvatarModal(true)}
+                    className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Edit3 size={24} className="text-white" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1 text-center lg:text-left space-y-4">
+              <div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="text-3xl font-bold bg-transparent border-b-2 border-white/40 focus:border-white focus:outline-none text-center lg:text-left w-full"
+                  />
+                ) : (
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                    {formData.name}
+                  </h1>
+                )}
+                <div className="flex items-center justify-center lg:justify-start gap-2 mt-2">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
+                    <span className="text-sm font-medium">{formData.course}</span>
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
+                    <span className="text-sm font-medium">{formData.department}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                {isEditing ? (
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    className="w-full bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl p-3 focus:border-white/60 focus:outline-none resize-none text-white placeholder-white/70"
+                    rows="2"
+                    placeholder="Tell us about yourself..."
+                  />
+                ) : (
+                  <p className="text-white/90 text-lg leading-relaxed max-w-2xl">
+                    {formData.description || "No description added yet."}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Stats Section */}
+            <div className="flex lg:flex-col gap-6 lg:gap-4">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Star size={24} className="fill-yellow-300 text-yellow-300" />
+                  <span className="text-2xl font-bold">{formData.reputationPoints}</span>
+                </div>
+                <p className="text-white/80 text-sm font-medium">Reputation</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="text-2xl font-bold mb-2">{formData.profileCompletion}%</div>
+                <p className="text-white/80 text-sm font-medium">Complete</p>
+                <div className="w-16 bg-white/20 rounded-full h-2 mt-2">
+                  <div 
+                    className="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${formData.profileCompletion}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Avatar Selection Modal */}
+      {showAvatarModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">Choose Avatar</h3>
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {avatarOptions.map((avatar, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, profileImage: avatar }));
+                    setShowAvatarModal(false);
+                  }}
+                  className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-colors"
+                >
+                  <img src={avatar} alt={`Avatar ${index + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowAvatarModal(false)}
+              className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors"
             >
               Cancel
             </button>
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-            >
-              <Save size={18} />
-              Save Changes
-            </button>
           </div>
-        ) : (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Edit3 size={18} />
-            Edit Profile
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Profile Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl shadow-lg p-6 text-white mb-6">
-        <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="relative">
-            <img
-              src={formData.profileImage || "/default-avatar.png"}
-              alt="Profile"
-              className="w-24 h-24 rounded-full object-cover border-4 border-white/30 shadow-lg"
-            />
-            {formData.status === "active" && (
-              <div className="absolute bottom-0 right-0 bg-green-500 p-1.5 rounded-full border-2 border-white">
-                <div className="w-3 h-3 rounded-full bg-white"></div>
+        {/* Modern Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+                <TrendingUp size={24} className="text-white" />
               </div>
-            )}
-          </div>
-          <div className="flex-1 text-center md:text-left">
-            {isEditing ? (
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="text-2xl font-bold bg-transparent border-b border-white/30 focus:border-white/70 focus:outline-none"
-              />
-            ) : (
-              <h1 className="text-2xl font-bold">{formData.name}</h1>
-            )}
-            <p className="text-blue-100">
-              {formData.course} • {formData.department}
-            </p>
-            {isEditing ? (
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                className="w-full mt-1 bg-transparent border-b border-white/30 focus:border-white/70 focus:outline-none resize-none"
-                rows="2"
-              />
-            ) : (
-              <p className="text-blue-100/90 mt-1">{formData.description}</p>
-            )}
-          </div>
-          <div className="flex flex-col items-center md:items-end gap-2">
-            <div className="flex items-center gap-2 text-yellow-300">
-              <Star size={20} className="fill-yellow-300" />
-              <span className="text-xl font-semibold">
-                {formData.reputationPoints}
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                {formData.profileCompletion}%
               </span>
             </div>
-            <p className="text-blue-100/80 text-sm">Reputation Points</p>
-            <div className="bg-white/20 rounded-full px-3 py-1 text-sm">
-              {formData.role.charAt(0).toUpperCase() + formData.role.slice(1)}
+            <h3 className="font-semibold text-gray-800 mb-2">Profile Completion</h3>
+            <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${formData.profileCompletion}%` }}
+              ></div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Stats and Progress */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              Profile Completion
-            </span>
-            <span className="text-blue-600 font-semibold">
-              {formData.profileCompletion}%
-            </span>
-          </div>
-          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${formData.profileCompletion}%` }}
-            ></div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <TrendingUp size={20} className="text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">CGPA</p>
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
+                <GraduationCap size={24} className="text-white" />
+              </div>
               {isEditing ? (
                 <input
                   type="number"
@@ -327,68 +429,72 @@ const Profile = () => {
                   step="0.01"
                   min="0"
                   max="10"
-                  className="text-xl font-bold text-gray-900 w-20 border-b border-gray-300 focus:border-blue-500 focus:outline-none"
+                  className="text-2xl font-bold bg-transparent border-b-2 border-gray-300 focus:border-green-500 focus:outline-none w-20 text-right"
                 />
               ) : (
-                <p className="text-xl font-bold text-gray-900">
+                <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   {formData.cgpa}/10
-                </p>
+                </span>
               )}
             </div>
+            <h3 className="font-semibold text-gray-800">CGPA</h3>
+            <p className="text-gray-600 text-sm">Academic Performance</p>
           </div>
-        </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Award size={20} className="text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Badges Earned</p>
-              <p className="text-xl font-bold text-gray-900">
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20 hover:shadow-2xl transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
+                <Award size={24} className="text-white" />
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 {formData.badges.length}
-              </p>
+              </span>
             </div>
+            <h3 className="font-semibold text-gray-800">Badges Earned</h3>
+            <p className="text-gray-600 text-sm">Achievements Unlocked</p>
           </div>
         </div>
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-2 mb-6 bg-white rounded-xl shadow-sm p-2 border border-gray-100">
-        {[
-          { id: "overview", label: "Overview", icon: UserCheck },
-          { id: "academic", label: "Academic", icon: GraduationCap },
-          { id: "skills", label: "Skills", icon: Award },
-          { id: "projects", label: "Projects", icon: Briefcase },
-          { id: "experience", label: "Experience", icon: Building },
-          { id: "social", label: "Social", icon: Link },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all ${
-              activeTab === tab.id
-                ? "bg-blue-100 text-blue-700 shadow-sm"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            }`}
-          >
-            <tab.icon size={18} />
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
+        {/* Modern Navigation Tabs */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-2 border border-white/20 mb-8">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: "overview", label: "Overview", icon: UserCheck, color: "from-blue-500 to-indigo-600" },
+              { id: "academic", label: "Academic", icon: GraduationCap, color: "from-green-500 to-emerald-600" },
+              { id: "skills", label: "Skills", icon: Award, color: "from-yellow-500 to-orange-600" },
+              { id: "projects", label: "Projects", icon: Briefcase, color: "from-purple-500 to-pink-600" },
+              { id: "experience", label: "Experience", icon: Building, color: "from-red-500 to-rose-600" },
+              { id: "social", label: "Social", icon: Link, color: "from-cyan-500 to-blue-600" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-3 rounded-xl font-medium flex items-center gap-3 transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? `bg-gradient-to-r ${tab.color} text-white shadow-lg transform scale-105`
+                    : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+                }`}
+              >
+                <tab.icon size={20} />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-      {/* Tab Content */}
-      <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-6 border border-gray-100">
-        {/* Overview Tab */}
-        {activeTab === "overview" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <UserCheck size={20} />
-                  Personal Information
-                </h3>
+        {/* Modern Tab Content */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 border border-white/20">
+          {/* Overview Tab */}
+          {activeTab === "overview" && (
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-gradient-to-br from-white/50 to-blue-50/50 rounded-2xl p-6 border border-white/30">
+                  <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                      <UserCheck size={20} className="text-white" />
+                    </div>
+                    Personal Information
+                  </h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <Mail size={18} className="text-gray-500" />
@@ -467,11 +573,13 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Award size={20} />
-                  Placement Status
-                </h3>
+                <div className="bg-gradient-to-br from-white/50 to-green-50/50 rounded-2xl p-6 border border-white/30">
+                  <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
+                      <Award size={20} className="text-white" />
+                    </div>
+                    Placement Status
+                  </h3>
                 {formData.isPlaced ? (
                   <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                     <div className="flex items-center gap-3 mb-2">
@@ -508,36 +616,40 @@ const Profile = () => {
               </div>
             </div>
 
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Trophy size={20} />
-                Badges & Achievements
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {formData.badges.map((badge, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium"
-                  >
-                    {badge}
-                  </span>
-                ))}
+              <div className="bg-gradient-to-br from-white/50 to-purple-50/50 rounded-2xl p-6 border border-white/30">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
+                    <Trophy size={20} className="text-white" />
+                  </div>
+                  Badges & Achievements
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {formData.badges.map((badge, index) => (
+                    <span
+                      key={index}
+                      className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg"
+                    >
+                      {badge}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Resume Section */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <FileText size={20} />
-                Resume
-              </h3>
+              {/* Resume Section */}
+              <div className="bg-gradient-to-br from-white/50 to-indigo-50/50 rounded-2xl p-6 border border-white/30">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg">
+                    <FileText size={20} className="text-white" />
+                  </div>
+                  Resume
+                </h3>
               {isEditing ? (
                 <div className="flex items-center gap-4">
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx"
                     onChange={handleResumeChange}
-                    className="border border-gray-300 rounded-lg p-2"
+                    className="border-2 border-dashed border-gray-300 rounded-xl p-4 w-full hover:border-indigo-400 transition-colors"
                   />
                   {resumePreview && (
                     <a
@@ -557,11 +669,11 @@ const Profile = () => {
                     href={formData.resumeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
                   >
-                    <FileText size={20} />
+                    <FileText size={18} />
                     View Resume
-                    <ExternalLink size={16} />
+                    <ExternalLink size={14} />
                   </a>
                 )
               )}
@@ -645,10 +757,10 @@ const Profile = () => {
                     </div>
                   ))}
                 </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Skills Tab */}
         {activeTab === "skills" && (
@@ -659,32 +771,37 @@ const Profile = () => {
             {isEditing ? (
               <div>
                 <textarea
-                  value={formData.skills.join(", ")}
+                  value={Array.isArray(formData.skills) ? formData.skills.join(", ") : ""}
                   onChange={(e) => {
-                    const skillsArray = e.target.value
+                    const inputValue = e.target.value;
+                    const skillsArray = inputValue
                       .split(",")
                       .map((skill) => skill.trim())
-                      .filter((skill) => skill !== "");
+                      .filter((skill) => skill.length > 0);
                     setFormData((prev) => ({ ...prev, skills: skillsArray }));
                   }}
-                  placeholder="Enter skills separated by commas"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                  rows="3"
+                  placeholder="Enter skills separated by commas (e.g., JavaScript, React, Node.js, Python)"
+                  className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none bg-white/50 backdrop-blur-sm"
+                  rows="4"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  Separate skills with commas
+                <p className="text-sm text-gray-600 mt-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                  Separate skills with commas (e.g., JavaScript, React, Node.js)
                 </p>
               </div>
             ) : (
               <div className="flex flex-wrap gap-3">
-                {formData.skills.map((skill, index) => (
+                {(Array.isArray(formData.skills) ? formData.skills : []).map((skill, index) => (
                   <span
                     key={index}
-                    className="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-medium"
+                    className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-full font-medium shadow-lg hover:shadow-xl transition-shadow"
                   >
                     {skill}
                   </span>
                 ))}
+                {(!formData.skills || formData.skills.length === 0) && (
+                  <p className="text-gray-500 italic">No skills added yet. Click edit to add your skills.</p>
+                )}
               </div>
             )}
           </div>
@@ -758,91 +875,243 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Projects and Experience tabs would need similar editing functionality */}
+        {/* Projects Tab */}
         {activeTab === "projects" && (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800">Projects</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-800">Projects</h3>
+              {isEditing && (
+                <button
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      projects: [...(prev.projects || []), {
+                        title: '',
+                        description: '',
+                        technologies: [],
+                        githubLink: '',
+                        liveDemo: ''
+                      }]
+                    }));
+                  }}
+                  className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm"
+                >
+                  Add Project
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {formData.projects.map((project, index) => (
                 <div
                   key={index}
                   className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow"
                 >
-                  <h4 className="font-semibold text-gray-800 mb-2">
-                    {project.title}
-                  </h4>
-                  <p className="text-gray-600 mb-4">{project.description}</p>
-
-                  <div className="mb-4">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">
-                      Technologies
-                    </h5>
-                    <div className="flex flex-wrap gap-2">
-                      {project.technologies.map((tech, i) => (
-                        <span
-                          key={i}
-                          className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs"
-                        >
-                          {tech}
-                        </span>
-                      ))}
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={project.title}
+                        onChange={(e) => {
+                          const newProjects = [...formData.projects];
+                          newProjects[index].title = e.target.value;
+                          setFormData(prev => ({ ...prev, projects: newProjects }));
+                        }}
+                        placeholder="Project Title"
+                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                      />
+                      <textarea
+                        value={project.description}
+                        onChange={(e) => {
+                          const newProjects = [...formData.projects];
+                          newProjects[index].description = e.target.value;
+                          setFormData(prev => ({ ...prev, projects: newProjects }));
+                        }}
+                        placeholder="Project Description"
+                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                        rows="3"
+                      />
+                      <input
+                        type="text"
+                        value={Array.isArray(project.technologies) ? project.technologies.join(', ') : ''}
+                        onChange={(e) => {
+                          const newProjects = [...formData.projects];
+                          const techArray = e.target.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
+                          newProjects[index].technologies = techArray;
+                          setFormData(prev => ({ ...prev, projects: newProjects }));
+                        }}
+                        placeholder="Technologies (comma separated: React, Node.js, MongoDB)"
+                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                      />
+                      <input
+                        type="url"
+                        value={project.githubLink}
+                        onChange={(e) => {
+                          const newProjects = [...formData.projects];
+                          newProjects[index].githubLink = e.target.value;
+                          setFormData(prev => ({ ...prev, projects: newProjects }));
+                        }}
+                        placeholder="GitHub Link"
+                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                      />
+                      <input
+                        type="url"
+                        value={project.liveDemo}
+                        onChange={(e) => {
+                          const newProjects = [...formData.projects];
+                          newProjects[index].liveDemo = e.target.value;
+                          setFormData(prev => ({ ...prev, projects: newProjects }));
+                        }}
+                        placeholder="Live Demo Link"
+                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                      />
+                      <button
+                        onClick={() => {
+                          const newProjects = formData.projects.filter((_, i) => i !== index);
+                          setFormData(prev => ({ ...prev, projects: newProjects }));
+                        }}
+                        className="text-red-600 text-sm hover:text-red-800"
+                      >
+                        Remove Project
+                      </button>
                     </div>
-                  </div>
+                  ) : (
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-2">
+                        {project.title}
+                      </h4>
+                      <p className="text-gray-600 mb-4">{project.description}</p>
 
-                  <div className="flex gap-3">
-                    {project.githubLink && (
-                      <a
-                        href={project.githubLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        <Github size={16} /> Code
-                      </a>
-                    )}
-                    {project.liveDemo && (
-                      <a
-                        href={project.liveDemo}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        <ExternalLink size={16} /> Live Demo
-                      </a>
-                    )}
-                  </div>
+                      <div className="mb-4">
+                        <h5 className="text-sm font-medium text-gray-700 mb-2">
+                          Technologies
+                        </h5>
+                        <div className="flex flex-wrap gap-2">
+                          {(Array.isArray(project.technologies) ? project.technologies : []).map((tech, i) => (
+                            <span
+                              key={i}
+                              className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        {project.githubLink && (
+                          <a
+                            href={project.githubLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            <Github size={16} /> Code
+                          </a>
+                        )}
+                        {project.liveDemo && (
+                          <a
+                            href={project.liveDemo}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            <ExternalLink size={16} /> Live Demo
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         )}
 
+        {/* Experience Tab */}
         {activeTab === "experience" && (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Work Experience
-            </h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-800">Work Experience</h3>
+              {isEditing && (
+                <button
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      experiences: [...prev.experiences, {
+                        role: '',
+                        company: '',
+                        description: ''
+                      }]
+                    }));
+                  }}
+                  className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm"
+                >
+                  Add Experience
+                </button>
+              )}
+            </div>
             <div className="space-y-4">
               {formData.experiences.map((exp, index) => (
-                <div
-                  key={index}
-                  className="border-l-4 border-blue-500 pl-4 py-2"
-                >
-                  <h4 className="font-semibold text-gray-800">
-                    {exp.role} • {exp.company}
-                  </h4>
-                  <p className="text-gray-600 text-sm mb-2">
-                    {new Date(exp.startDate).toLocaleDateString()} -{" "}
-                    {exp.currentlyWorking
-                      ? "Present"
-                      : new Date(exp.endDate).toLocaleDateString()}
-                  </p>
-                  <p className="text-gray-700">{exp.description}</p>
+                <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={exp.role}
+                        onChange={(e) => {
+                          const newExperiences = [...formData.experiences];
+                          newExperiences[index].role = e.target.value;
+                          setFormData(prev => ({ ...prev, experiences: newExperiences }));
+                        }}
+                        placeholder="Job Role"
+                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={exp.company}
+                        onChange={(e) => {
+                          const newExperiences = [...formData.experiences];
+                          newExperiences[index].company = e.target.value;
+                          setFormData(prev => ({ ...prev, experiences: newExperiences }));
+                        }}
+                        placeholder="Company Name"
+                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                      />
+                      <textarea
+                        value={exp.description}
+                        onChange={(e) => {
+                          const newExperiences = [...formData.experiences];
+                          newExperiences[index].description = e.target.value;
+                          setFormData(prev => ({ ...prev, experiences: newExperiences }));
+                        }}
+                        placeholder="Job Description"
+                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
+                        rows="3"
+                      />
+                      <button
+                        onClick={() => {
+                          const newExperiences = formData.experiences.filter((_, i) => i !== index);
+                          setFormData(prev => ({ ...prev, experiences: newExperiences }));
+                        }}
+                        className="text-red-600 text-sm hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <h4 className="font-semibold text-gray-800">
+                        {exp.role} • {exp.company}
+                      </h4>
+                      <p className="text-gray-700">{exp.description}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

@@ -3,36 +3,33 @@ import Application from "../models/ApplicationModel.js";
 import Job from "../models/JobModel.js";
 import User from "../models/UserModel.js";
 
-// Student applies to job
 export const applyToJob = async (req, res) => {
   try {
     const jobId = req.params.jobId;
+    const studentId = req.user._id;
+    
     const job = await Job.findById(jobId);
-    if (!job || !job.isActive) return res.status(404).json({ message: "Job not found or inactive" });
+    if (!job) return res.status(404).json({ message: "Job not found" });
+    
+    const existing = await Application.findOne({ student: studentId, job: jobId });
+    if (existing && !['rejected by mentor', 'rejected by recruiter'].includes(existing.status)) {
+      return res.status(400).json({ message: "Already applied" });
+    }
+    
+    if (existing) await Application.findByIdAndDelete(existing._id);
 
-    // Prevent duplicate application via unique index (but handle nicely)
-    const existing = await Application.findOne({ student: req.user._id, job: jobId });
-    if (existing) return res.status(400).json({ message: "Already applied" });
-
-    // assign student's mentor if available
-    const student = await User.findById(req.user._id).select("assignedMentor");
-    const mentorId = student?.assignedMentor || null;
-
-    const application = await Application.create({
-      student: req.user._id,
+    const student = await User.findById(studentId).select('assignedMentor');
+    
+    await Application.create({
+      student: studentId,
       job: jobId,
-      mentor: mentorId,
-      recruiter: job.createdBy,
-      studentNote: req.body.studentNote || ""
+      mentor: student?.assignedMentor,
+      recruiter: job.recruiter
     });
 
-    // Optionally notify mentor (email/notification) - out of scope
-    res.status(201).json(application);
+    res.status(201).json({ message: "Applied successfully" });
   } catch (err) {
-    console.error(err);
-    // handle duplicate index error
-    if (err.code === 11000) return res.status(400).json({ message: "Already applied" });
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -47,8 +44,8 @@ export const getMyApplications = async (req, res) => {
 
     res.json(apps);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Get My Applications Error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
@@ -62,8 +59,8 @@ export const getMentorApplications = async (req, res) => {
 
     res.json(apps);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Get Mentor Applications Error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
@@ -113,8 +110,32 @@ export const getRecruiterApplications = async (req, res) => {
 
     res.json(apps);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Get Recruiter Applications Error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+// Student: withdraw application
+export const withdrawApplication = async (req, res) => {
+  try {
+    const app = await Application.findById(req.params.id);
+    if (!app) return res.status(404).json({ message: "Application not found" });
+
+    // ensure student owns this application
+    if (String(app.student) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Only allow withdrawal if pending
+    if (app.status !== "pending mentor approval") {
+      return res.status(400).json({ message: "Cannot withdraw application at this stage" });
+    }
+
+    await Application.findByIdAndDelete(req.params.id);
+    res.json({ message: "Application withdrawn successfully" });
+  } catch (err) {
+    console.error("Withdraw Application Error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 

@@ -30,119 +30,7 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'Backend is working!' });
 });
 
-// Debug route to list all registered users
-app.get('/api/debug/users', async (req, res) => {
-  try {
-    const User = (await import('./models/UserModel.js')).default;
-    const users = await User.find({});
-    console.log('Debug - All users:', users);
-    res.json({
-      count: users.length,
-      users: users.map(u => ({
-        email: u.email,
-        rollNo: u.rollNo,
-        name: u.name,
-        status: u.status,
-        createdAt: u.createdAt
-      }))
-    });
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
 
-// Debug route to list registered emails (development only)
-app.get('/api/debug/registered-emails', async (req, res) => {
-  try {
-    const User = (await import('./models/UserModel.js')).default;
-    const users = await User.find({}, 'email rollNo name status');
-    console.log('Registered users:', users);
-    res.json({
-      count: users.length,
-      users: users.map(u => ({
-        email: u.email,
-        rollNo: u.rollNo,
-        name: u.name,
-        status: u.status
-      }))
-    });
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Error fetching users' });
-  }
-});
-
-// Debug route to check mentor assignments
-app.get('/api/debug/mentor-assignments', async (req, res) => {
-  try {
-    const User = (await import('./models/UserModel.js')).default;
-    const students = await User.find({ role: 'student' })
-      .populate('assignedMentor', 'name email department')
-      .select('name email department year rollNo status assignedMentor');
-    
-    const mentors = await User.find({ role: 'mentor' })
-      .select('name email department');
-    
-    res.json({ 
-      students: students.map(s => ({
-        _id: s._id,
-        name: s.name,
-        email: s.email,
-        department: s.department,
-        year: s.year,
-        rollNo: s.rollNo,
-        status: s.status,
-        assignedMentor: s.assignedMentor
-      })),
-      mentors: mentors.map(m => ({
-        _id: m._id,
-        name: m.name,
-        email: m.email,
-        department: m.department
-      }))
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Quick assign mentor endpoint for testing
-app.post('/api/debug/assign-mentor', async (req, res) => {
-  try {
-    const { studentId, mentorId } = req.body;
-    const User = (await import('./models/UserModel.js')).default;
-    
-    const student = await User.findByIdAndUpdate(
-      studentId,
-      { assignedMentor: mentorId },
-      { new: true }
-    );
-    
-    res.json({ success: true, student });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Debug route to check database contents (remove in production)
-app.get('/api/debug/users', async (req, res) => {
-  try {
-    const User = (await import('./models/UserModel.js')).default;
-    const users = await User.find({}).select('-password');
-    res.json({ 
-      count: users.length,
-      users: users.map(u => ({ 
-        email: u.email, 
-        rollNo: u.rollNo,
-        name: u.name,
-        status: u.status
-      }))
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
@@ -150,10 +38,11 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/recruiter", recruiterRoutes);
 app.use("/api/mentor", mentorRoutes);
 
-app.use("/api", jobRoutes);            // GET /api/jobs, POST /api/jobs
-app.use("/api/applications", applicationRoutes); // POST /api/applications/:jobId/apply, GET /api/applications/my, etc.
+app.use("/api/jobs", jobRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/posts", postRoutes);
 
-app.use("/api", postRoutes);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

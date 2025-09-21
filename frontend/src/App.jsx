@@ -20,6 +20,8 @@ import RecruiterStudentProfile from "./pages/recruiter/RecruiterStudentProfile";
 import StudentsList from "./pages/recruiter/StudentsList";
 import AdminPostSection from "./pages/admin/AdminPostSection";
 import RecruiterJobs from "./pages/recruiter/RecruiterJobs";
+import RecruiterApplications from "./pages/recruiter/RecruiterApplications";
+import RecruiterDashboard from "./pages/recruiter/RecruiterDashboard";
 
 
 function App() {
@@ -45,10 +47,11 @@ function App() {
         </Route>
         
         <Route path="/recruiter" element={<ProtectedRoute><DashboardLayout userRole="recruiter" /></ProtectedRoute>}>
-          <Route index element={<div>Recruiter Dashboard - Coming Soon</div>} />
-          <Route path="/recruiter/students" element={<StudentsList />} />
-          <Route path="/recruiter/student/:id" element={<RecruiterStudentProfile />} />
-          <Route path="/recruiter/post" element={<RecruiterJobs /> } />
+          <Route index element={<RecruiterDashboard />} />
+          <Route path="applications" element={<RecruiterApplications />} />
+          <Route path="students" element={<StudentsList />} />
+          <Route path="student/:id" element={<RecruiterStudentProfile />} />
+          <Route path="post" element={<RecruiterJobs /> } />
         </Route>
         
         <Route path="/admin" element={<ProtectedRoute><DashboardLayout userRole="admin" /></ProtectedRoute>}>
@@ -59,7 +62,19 @@ function App() {
         </Route>
 
       </Routes>
-      <Toaster position="top-right" />
+      <Toaster 
+        position="top-center" 
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          },
+        }}
+      />
     </>
   );
 }

@@ -2,7 +2,7 @@ import User from "../models/UserModel.js";
 
 export const getStudentProfile = async (req, res) => {
   try {
-    const student = await User.findById(req.user.id)
+    const student = await User.findById(req.user._id)
       .populate('assignedMentor', 'name email department')
       .select('-password');
     
@@ -20,7 +20,8 @@ export const updateStudentProfile = async (req, res) => {
   try {
     const allowedFields = [
       'name', 'phone', 'year', 'cgpa', 'description', 'skills', 
-      'socialLinks', 'projects', 'experiences', 'course', 'specialization', 'backlogs'
+      'socialLinks', 'projects', 'experiences', 'course', 'specialization', 'backlogs',
+      'profileImage', 'resumeUrl'
     ];
 
     const updates = {};
@@ -31,7 +32,7 @@ export const updateStudentProfile = async (req, res) => {
     }
 
     const student = await User.findByIdAndUpdate(
-      req.user.id,
+      req.user._id,
       updates,
       { new: true, runValidators: true }
     ).select('-password');

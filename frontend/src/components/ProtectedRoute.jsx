@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { isTokenValid, handleAuthError } from '../utils/auth';
 
 const ProtectedRoute = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-  }, []);
+    if (!isTokenValid()) {
+      handleAuthError(navigate);
+    }
+  }, [navigate]);
 
-  if (isAuthenticated === null) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  // If token is invalid, the useEffect will handle redirect
+  // Return children only if token is valid
+  return isTokenValid() ? children : null;
 };
 
 export default ProtectedRoute;

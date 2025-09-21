@@ -17,7 +17,7 @@ const Approvals = () => {
       }
 
       try {
-        const res = await fetch('http://localhost:5000/api/mentor/pending-applications', {
+        const res = await fetch('http://localhost:5000/api/applications/mentor', {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -31,7 +31,7 @@ const Approvals = () => {
         }
 
         const data = await res.json();
-        setApplications(data.applications || []);
+        setApplications(data || []);
       } catch (err) {
         console.error(err);
         toast.error('Failed to load pending applications');
@@ -48,30 +48,58 @@ const Approvals = () => {
   const [showModal, setShowModal] = useState(false);
   const [actionType, setActionType] = useState('');
 
-  const handleApprove = (appId) => {
-    setApplications(apps => 
-      apps.map(app => 
-        app.id === appId 
-          ? { ...app, status: 'approved', mentorComment: comment }
-          : app
-      )
-    );
-    toast.success('Application approved successfully');
-    setShowModal(false);
-    setComment('');
+  const handleApprove = async (appId) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`http://localhost:5000/api/applications/${appId}/mentor`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'approve',
+          mentorNote: comment
+        })
+      });
+
+      if (!res.ok) throw new Error('Failed to approve application');
+
+      setApplications(apps => apps.filter(app => app._id !== appId));
+      toast.success('Application approved successfully');
+      setShowModal(false);
+      setComment('');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to approve application');
+    }
   };
 
-  const handleReject = (appId) => {
-    setApplications(apps => 
-      apps.map(app => 
-        app.id === appId 
-          ? { ...app, status: 'rejected', mentorComment: comment }
-          : app
-      )
-    );
-    toast.success('Application rejected with feedback');
-    setShowModal(false);
-    setComment('');
+  const handleReject = async (appId) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`http://localhost:5000/api/applications/${appId}/mentor`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'reject',
+          mentorNote: comment
+        })
+      });
+
+      if (!res.ok) throw new Error('Failed to reject application');
+
+      setApplications(apps => apps.filter(app => app._id !== appId));
+      toast.success('Application rejected with feedback');
+      setShowModal(false);
+      setComment('');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to reject application');
+    }
   };
 
   const openModal = (app, action) => {
@@ -98,11 +126,11 @@ const Approvals = () => {
           <div key={app._id} className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="font-semibold text-lg">{app.studentId?.name}</h3>
-                <p className="text-gray-600">{app.studentId?.email} • {app.studentId?.year}</p>
-                <p className="text-gray-500 text-sm">Roll No: {app.studentId?.rollNo} • {app.studentId?.department}</p>
+                <h3 className="font-semibold text-lg">{app.student?.name}</h3>
+                <p className="text-gray-600">{app.student?.email} • {app.student?.year}</p>
+                <p className="text-gray-500 text-sm">Roll No: {app.student?.rollNo} • {app.student?.department}</p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Applied for <span className="font-medium">{app.jobId?.title}</span> at <span className="font-medium">{app.jobId?.company}</span>
+                  Applied for <span className="font-medium">{app.job?.title}</span>
                 </p>
               </div>
               <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
@@ -125,10 +153,6 @@ const Approvals = () => {
               </div>
               
               <div className="flex gap-2">
-                <button className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm">
-                  <Eye size={16} />
-                  View Resume
-                </button>
                 <button 
                   onClick={() => openModal(app, 'reject')}
                   className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
@@ -165,7 +189,7 @@ const Approvals = () => {
               {actionType === 'approve' ? 'Approve Application' : 'Reject Application'}
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              {selectedApp?.studentId?.name} - {selectedApp?.jobId?.title}
+              {selectedApp?.student?.name} - {selectedApp?.job?.title}
             </p>
             
             <textarea

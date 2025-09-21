@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Calendar, Award, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { TrendingUp, Calendar, Award, AlertCircle, CheckCircle, X, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Progress = () => {
   const [students, setStudents] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -12,6 +14,8 @@ const Progress = () => {
 
   useEffect(() => {
     fetchProgressData();
+    const interval = setInterval(fetchProgressData, 3000); // Update every 3 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const fetchProgressData = async () => {
@@ -22,24 +26,16 @@ const Progress = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/mentor/progress-tracking', {
+      const appsRes = await axios.get('http://localhost:5000/api/applications/mentor', {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      if (!res.ok) {
-        if (res.status === 401) {
-          localStorage.removeItem('token');
-          navigate('/login');
-          return;
-        }
-        throw new Error('Failed to fetch progress data');
-      }
-
-      const data = await res.json();
-      setStudents(data.students || []);
+      
+      setApplications(appsRes.data || []);
+      setStudents([]);
     } catch (err) {
-      console.error(err);
-      toast.error('Failed to load progress data');
+      console.error('Error:', err);
+      setApplications([]);
+      setStudents([]);
     } finally {
       setLoading(false);
     }
@@ -104,10 +100,49 @@ const Progress = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Progress Tracking</h1>
-        <div className="text-sm text-gray-600">
-          {students.filter(s => s.isPlaced).length} of {students.length} students placed
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-4">Progress Tracking</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center">
+              <ThumbsUp className="w-6 h-6 text-green-600 mr-2" />
+              <div>
+                <p className="text-sm text-gray-600">Approved</p>
+                <p className="text-xl font-bold">{applications.filter(app => app.status === 'pending recruiter review').length}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center">
+              <ThumbsDown className="w-6 h-6 text-red-600 mr-2" />
+              <div>
+                <p className="text-sm text-gray-600">Rejected</p>
+                <p className="text-xl font-bold">{applications.filter(app => app.status === 'rejected by mentor').length}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center">
+              <AlertCircle className="w-6 h-6 text-yellow-600 mr-2" />
+              <div>
+                <p className="text-sm text-gray-600">Pending</p>
+                <p className="text-xl font-bold">{applications.filter(app => app.status === 'pending mentor approval').length}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center">
+              <Award className="w-6 h-6 text-blue-600 mr-2" />
+              <div>
+                <p className="text-sm text-gray-600">Total Applications</p>
+                <p className="text-xl font-bold">{applications.length}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

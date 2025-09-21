@@ -24,7 +24,7 @@ const applicationSchema = new mongoose.Schema({
   interviewDate: { type: Date },
 }, { timestamps: true });
 
-applicationSchema.index({ student: 1, job: 1 }, { unique: true }); // prevent duplicate apply
+applicationSchema.index({ student: 1, job: 1 }, { unique: true });
 
 const Application = mongoose.model("Application", applicationSchema);
 export default Application;

@@ -5,21 +5,23 @@ import {
   getJobById,
   toggleJobActive,
   scheduleInterview,
-  applyToJob,
   getAllJobsForStudents,
-  getMyApplications
+  getMyApplications,
+  deleteJob
 } from "../controllers/jobController.js";
-import { protect, recruiterOnly } from "../middleware/authMiddleware.js";
+
+import { protect, recruiterOnly, studentOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/post-job", protect, recruiterOnly, createJob);
-router.get("/get-post", protect, getRecruiterJobs);
-router.get("/all-post", protect, getAllJobsForStudents);
-router.get("/post/:id", protect, getJobById);
+router.post("/", protect, recruiterOnly, createJob);
+router.get("/recruiter", protect, getRecruiterJobs);
+router.get("/", protect, getAllJobsForStudents);
+router.get("/:id", protect, getJobById);
 router.put("/:id/toggle", protect, recruiterOnly, toggleJobActive);
-router.put("/:jobId/recruiter/:studentId/schedule", protect, recruiterOnly, scheduleInterview);
-router.post("/post/:id/apply", protect, applyToJob);
-router.get("/jobs/my-applications", protect, getMyApplications);
+router.put("/:jobId/schedule/:studentId", protect, recruiterOnly, scheduleInterview);
+
+router.get("/my-applications", protect, getMyApplications);
+router.delete("/:id", protect, recruiterOnly, deleteJob);
 
 export default router;

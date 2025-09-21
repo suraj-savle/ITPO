@@ -1,40 +1,13 @@
 import express from "express";
 import { protect, studentOnly } from "../middleware/authMiddleware.js";
-import { updateProfile } from "../controllers/authController.js";
+import { getStudentProfile, updateStudentProfile } from "../controllers/studentController.js";
 import upload from "../middleware/uploadMiddleware.js";
 import User from "../models/UserModel.js";
 
 const router = express.Router();
 
-router.get("/profile", protect, studentOnly, async (req, res) => {
-  try {
-    const student = await User.findById(req.user._id).select("-password");
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-    res.json(student);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
+router.get("/profile", protect, studentOnly, getStudentProfile);
 
-// Update profile with file upload support
-router.put(
-  "/update-profile",
-  protect,
-  studentOnly,
-  async (req, res, next) => {
-    try {
-      console.log('Update Profile Request:', {
-        body: req.body,
-        userId: req.user._id
-      });
-      next();
-    } catch (error) {
-      next(error);
-    }
-  },
-  updateProfile
-);
+router.put("/update-profile", protect, studentOnly, updateStudentProfile);
 
 export default router;

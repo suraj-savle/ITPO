@@ -11,6 +11,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function StudentHome() {
   const navigate = useNavigate();
@@ -33,38 +34,52 @@ export default function StudentHome() {
       }
 
       try {
-        // Mock data for now since backend endpoints may not exist
+        // Fetch applications data
+        const appsRes = await axios.get('http://localhost:5000/api/applications/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const applications = appsRes.data || [];
+        
+        // Calculate statistics
+        const totalApplications = applications.length;
+        const activeApplications = applications.filter(app => 
+          ['pending mentor approval', 'pending recruiter review'].includes(app.status)
+        ).length;
+        const interviews = applications.filter(app => 
+          app.status === 'interview scheduled'
+        ).length;
+        
         setStats({
-          totalApplications: 5,
-          activeApplications: 3,
-          interviews: 2,
-          certificates: 1
+          totalApplications,
+          activeApplications,
+          interviews,
+          certificates: 1 // Static for now
         });
 
-        setRecentApplications([
-          {
-            id: 1,
-            jobTitle: 'Software Developer Intern',
-            company: 'TechCorp',
-            status: 'pending'
-          },
-          {
-            id: 2,
-            jobTitle: 'Data Science Intern',
-            company: 'DataSoft',
-            status: 'accepted'
-          }
-        ]);
+        // Recent applications (last 5)
+        const recentApps = applications
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 5)
+          .map(app => ({
+            id: app._id,
+            jobTitle: app.job?.title || 'Job Title',
+            company: app.job?.location || 'Company',
+            status: app.status
+          }));
+        setRecentApplications(recentApps);
 
-        setUpcomingInterviews([
-          {
-            id: 1,
-            jobTitle: 'Frontend Developer',
-            company: 'WebSolutions',
-            scheduledAt: new Date(Date.now() + 86400000).toISOString(),
-            type: 'Technical'
-          }
-        ]);
+        // Upcoming interviews
+        const upcomingInterviews = applications
+          .filter(app => app.status === 'interview scheduled' && app.interviewDate)
+          .map(app => ({
+            id: app._id,
+            jobTitle: app.job?.title || 'Job Title',
+            company: app.job?.location || 'Company',
+            scheduledAt: app.interviewDate,
+            type: 'Interview'
+          }));
+        setUpcomingInterviews(upcomingInterviews);
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);

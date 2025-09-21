@@ -20,7 +20,7 @@ const AdminPostSection = () => {
   const fetchPosts = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/admin/posts", {
+      const res = await fetch("http://localhost:5000/api/posts", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch posts");
@@ -37,7 +37,7 @@ const AdminPostSection = () => {
   const fetchPostHistory = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/admin/post-history", {
+      const res = await fetch("http://localhost:5000/api/posts/history", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch post history");
@@ -63,7 +63,7 @@ const AdminPostSection = () => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/admin/posts", {
+      const res = await fetch("http://localhost:5000/api/posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
