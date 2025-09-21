@@ -109,24 +109,56 @@ export const applyToJob = async (req, res) => {
     const jobId = req.params.id;
     const studentId = req.user._id;
 
+    // 1️⃣ Fetch the job
     const job = await Job.findById(jobId);
     if (!job) return res.status(404).json({ message: "Job not found" });
 
-    // Check if already applied
-    if (job.applications.find(a => a.student.toString() === studentId.toString())) {
+    // 2️⃣ Clean any invalid application entries
+    job.applications = job.applications.filter(app => app.user); // remove entries where user is undefined/null
+
+    // 3️⃣ Check if student already applied
+    const alreadyAppliedInJob = job.applications.some(
+      a => a.user.toString() === studentId.toString()
+    );
+    if (alreadyAppliedInJob) {
       return res.status(400).json({ message: "Already applied" });
     }
 
-    // Add student application
-    job.applications.push({ student: studentId, status: "pending" });
+    // 4️⃣ Add student to job's applications
+    job.applications.push({
+      user: studentId,
+      status: "pending",
+      appliedOn: new Date(),
+    });
     await job.save();
 
-    res.status(200).json({ message: "Applied successfully" });
+    // 5️⃣ Update student's appliedJobs array
+    const student = await User.findById(studentId);
+    if (!student) return res.status(404).json({ message: "Student not found" });
+
+    // Remove any invalid entries in student's appliedJobs
+    student.appliedJobs = student.appliedJobs.filter(app => app.jobId);
+
+    const alreadyAppliedInStudent = student.appliedJobs.some(
+      app => app.jobId.toString() === jobId.toString()
+    );
+    if (!alreadyAppliedInStudent) {
+      student.appliedJobs.push({
+        jobId: jobId,
+        status: "applied",  // student-side status
+        appliedOn: new Date(),
+      });
+      await student.save();
+    }
+
+    return res.status(200).json({ message: "Applied successfully" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Apply Job Error:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 // backend/controllers/jobController.js
 export const getAllJobsForStudents = async (req, res) => {
@@ -146,11 +178,34 @@ export const getAllJobsForStudents = async (req, res) => {
 // Get all applications made by the logged-in student
 export const getMyApplications = async (req, res) => {
   try {
-    const studentId = req.user._id;  // ensure req.user exists
-    const applications = await Job.find({ applicants: studentId });
+    const studentId = req.user._id;
+
+    // Find all jobs where the applications array contains this student
+    const jobs = await Job.find({ "applications.user": studentId })
+      .populate("recruiter", "name email")
+      .sort({ createdAt: -1 });
+
+    // Map to include only the application info for this student
+    const applications = jobs.map((job) => {
+      const app = job.applications.find(a => a.user.toString() === studentId.toString());
+      return {
+        _id: app._id,
+        job: {
+          _id: job._id,
+          title: job.title,
+          description: job.description,
+          location: job.location,
+          stipend: job.stipend,
+        },
+        status: app.status,
+        interviewDate: app.interviewDate,
+        appliedOn: app.appliedOn,
+      };
+    });
+
     res.json(applications);
   } catch (err) {
-    console.error(err);  // <-- this will show the error in terminal
-    res.status(500).json({ message: "Server Error" });
+    console.error("Get My Applications Error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

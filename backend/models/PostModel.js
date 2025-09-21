@@ -11,7 +11,14 @@ const postSchema = mongoose.Schema(
     stipend: { type: String },
     applyLink: { type: String },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    applications: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        status: { type: String, default: "pending" },
+        appliedOn: { type: Date, default: Date.now },
+        interviewDate: Date
+      }
+    ]
   },
   { timestamps: true }
 );

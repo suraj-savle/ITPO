@@ -11,14 +11,44 @@ export default function StudentJobs() {
 
   const token = localStorage.getItem("token");
 
-  // Fetch available jobs
+  // Fetch all applications first to filter jobs
+  const fetchApplications = async () => {
+    setLoadingApps(true);
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/jobs/my-applications",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setMyApps(res.data || []);
+      return res.data || [];
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+      toast.error("Failed to load your applications.");
+      setMyApps([]);
+      return [];
+    } finally {
+      setLoadingApps(false);
+    }
+  };
+
+  // Fetch available jobs excluding already applied
   const fetchJobs = async () => {
     setLoadingJobs(true);
     try {
+      const appliedApps = await fetchApplications(); // get applied jobs first
       const res = await axios.get("http://localhost:5000/api/all-post", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setJobs(res.data || []);
+
+      // Filter out jobs student has already applied to
+      const appliedJobIds = appliedApps.map((app) => app.job?._id);
+      const availableJobs = (res.data || []).filter(
+        (job) => !appliedJobIds.includes(job._id)
+      );
+
+      setJobs(availableJobs);
     } catch (err) {
       console.error("Error fetching jobs:", err);
       toast.error("Failed to load jobs.");
@@ -28,26 +58,8 @@ export default function StudentJobs() {
     }
   };
 
-  // Fetch my applications
-  const fetchApplications = async () => {
-    setLoadingApps(true);
-    try {
-      const res = await axios.get("http://localhost:5000/api/jobs/my-applications", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMyApps(res.data || []);
-    } catch (err) {
-      console.error("Error fetching applications:", err);
-      toast.error("Failed to load your applications.");
-      setMyApps([]);
-    } finally {
-      setLoadingApps(false);
-    }
-  };
-
   useEffect(() => {
     fetchJobs();
-    fetchApplications();
   }, []);
 
   const applyJob = async (jobId) => {
@@ -58,11 +70,16 @@ export default function StudentJobs() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Applied successfully!");
-      fetchJobs();
-      fetchApplications();
+
+      // Move job from Available Jobs to My Applications instantly
+      const appliedJob = jobs.find((job) => job._id === jobId);
+      if (appliedJob) {
+        setMyApps((prev) => [...prev, { job: appliedJob, status: "applied" }]);
+        setJobs((prev) => prev.filter((job) => job._id !== jobId));
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Error applying");
-      console.error(err);
+      console.error("Apply Job Error:", err);
     }
   };
 
@@ -74,11 +91,15 @@ export default function StudentJobs() {
       ) : jobs.length > 0 ? (
         <div className="grid gap-4">
           {jobs.map((job) => (
-            <div key={job._id} className="bg-white p-4 rounded shadow flex flex-col">
+            <div
+              key={job._id}
+              className="bg-white p-4 rounded shadow flex flex-col"
+            >
               <h3 className="font-bold">{job.title}</h3>
               <p>{job.description}</p>
               <p className="text-sm text-gray-500">
-                {job.location} • {job.stipend || "N/A"} • Skills: {job.skillsRequired?.join(", ") || "N/A"}
+                {job.location} • {job.stipend || "N/A"} • Skills:{" "}
+                {job.skillsRequired?.join(", ") || "N/A"}
               </p>
               <button
                 className="mt-2 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
@@ -90,7 +111,7 @@ export default function StudentJobs() {
           ))}
         </div>
       ) : (
-        <p>No jobs available</p>
+        <p>No jobs available to apply.</p>
       )}
 
       <h2 className="text-2xl font-bold my-4">My Applications</h2>
@@ -99,9 +120,14 @@ export default function StudentJobs() {
       ) : myApps.length > 0 ? (
         <div className="space-y-2">
           {myApps.map((app) => (
-            <div key={app._id} className="bg-white p-3 rounded shadow flex justify-between">
+            <div
+              key={app._id}
+              className="bg-white p-3 rounded shadow flex justify-between"
+            >
               <div>
-                <h4 className="font-semibold">{app.job?.title || "Job title not available"}</h4>
+                <h4 className="font-semibold">
+                  {app.job?.title || "Job title not available"}
+                </h4>
                 <p>Status: {app.status || "N/A"}</p>
               </div>
               {app.interviewDate && (
