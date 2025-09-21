@@ -1,6 +1,6 @@
 import express from "express";
-import { protect, recruiterOnly } from "../middleware/authMiddleware.js"; // make sure these exist
-import Student from "../models/StudentModel.js";    
+import { protect, recruiterOnly } from "../middleware/authMiddleware.js";
+import User from "../models/UserModel.js";    
 
 const router = express.Router(); // ✅ Define router
 
@@ -48,7 +48,7 @@ router.get("/students", protect, recruiterOnly, async (req, res) => {
 // GET single student by ID
 router.get("/student/:id", protect, recruiterOnly, async (req, res) => {
   try {
-    const student = await Student.findById(req.params.id);
+    const student = await User.findById(req.params.id);
     if (!student) return res.status(404).json({ message: "Student not found" });
 
     res.json(student);

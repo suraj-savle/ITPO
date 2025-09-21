@@ -1,7 +1,6 @@
 import express from "express";
 import { protect, studentOnly } from "../middleware/authMiddleware.js";
 import { getStudentProfile, updateStudentProfile } from "../controllers/studentController.js";
-import upload from "../middleware/uploadMiddleware.js";
 import User from "../models/UserModel.js";
 
 const router = express.Router();
