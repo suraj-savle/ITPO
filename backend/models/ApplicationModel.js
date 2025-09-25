@@ -22,6 +22,7 @@ const applicationSchema = new mongoose.Schema({
   mentorNote: { type: String, default: "" },
   recruiterNote: { type: String, default: "" },
   interviewDate: { type: Date },
+  rejectedAt: { type: Date }, // Track when application was rejected
 }, { timestamps: true });
 
 applicationSchema.index({ student: 1, job: 1 }, { unique: true });

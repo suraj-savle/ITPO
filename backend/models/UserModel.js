@@ -79,9 +79,9 @@ const userSchema = new mongoose.Schema({
         appliedOn: { type: Date, default: Date.now }
     }],
 
-    coverLetter: { type: String, default: "" },
-    resumeUrl: { type: String, default: "" },
-    profileUrl: { type: String, default: "" },
+    coverLetter: { type: String, default: "" }, // General cover letter for job applications
+    resumeUrl: { type: String, default: "" }, // URL to uploaded resume file
+    profileUrl: { type: String, default: "" }, // Public profile/portfolio URL
     assignedMentor: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
     // ===== SOCIAL LINKS =====

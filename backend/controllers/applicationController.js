@@ -12,11 +12,36 @@ export const applyToJob = async (req, res) => {
     if (!job) return res.status(404).json({ message: "Job not found" });
     
     const existing = await Application.findOne({ student: studentId, job: jobId });
-    if (existing && !['rejected by mentor', 'rejected by recruiter'].includes(existing.status)) {
-      return res.status(400).json({ message: "Already applied" });
+    if (existing) {
+      if (!['rejected by mentor', 'rejected by recruiter'].includes(existing.status)) {
+        return res.status(400).json({ message: "Already applied" });
+      }
+      
+      // Check 1-minute cooldown for rejected applications
+      if (existing.rejectedAt) {
+        const oneMinuteAgo = new Date();
+        oneMinuteAgo.setMinutes(oneMinuteAgo.getMinutes() - 1);
+        
+        if (existing.rejectedAt > oneMinuteAgo) {
+          const canReapplyDate = new Date(existing.rejectedAt);
+          canReapplyDate.setMinutes(canReapplyDate.getMinutes() + 1);
+          return res.status(400).json({ 
+            message: `Cannot reapply until ${canReapplyDate.toLocaleString()}` 
+          });
+        }
+      } else {
+        // For old rejections without timestamp, set rejectedAt to now and block for 1 minute
+        existing.rejectedAt = new Date();
+        await existing.save();
+        const canReapplyDate = new Date();
+        canReapplyDate.setMinutes(canReapplyDate.getMinutes() + 1);
+        return res.status(400).json({ 
+          message: `Cannot reapply until ${canReapplyDate.toLocaleString()}` 
+        });
+      }
+      
+      await Application.findByIdAndDelete(existing._id);
     }
-    
-    if (existing) await Application.findByIdAndDelete(existing._id);
 
     const student = await User.findById(studentId).select('assignedMentor');
     
@@ -82,6 +107,7 @@ export const mentorDecision = async (req, res) => {
     } else if (action === "reject") {
       app.status = "rejected by mentor";
       app.mentorNote = mentorNote || "";
+      app.rejectedAt = new Date();
     } else {
       return res.status(400).json({ message: "Invalid action" });
     }
@@ -154,6 +180,7 @@ export const recruiterDecision = async (req, res) => {
     if (action === "reject") {
       app.status = "rejected by recruiter";
       app.recruiterNote = recruiterNote || "";
+      app.rejectedAt = new Date();
     } else if (action === "schedule") {
       if (!interviewDate) return res.status(400).json({ message: "interviewDate required" });
       app.status = "interview scheduled";

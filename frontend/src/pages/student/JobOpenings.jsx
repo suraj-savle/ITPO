@@ -41,10 +41,24 @@ export default function StudentJobs() {
       
       const jobsWithStatus = jobsData.map(job => {
         const application = applications.find(app => app.job && app.job._id === job._id);
+        let canApply = !application;
+        
+        if (application && ['rejected by mentor', 'rejected by recruiter'].includes(application.status)) {
+          // Check if rejection was within last minute
+          if (application.rejectedAt) {
+            const oneMinuteAgo = new Date();
+            oneMinuteAgo.setMinutes(oneMinuteAgo.getMinutes() - 1);
+            canApply = new Date(application.rejectedAt) <= oneMinuteAgo;
+          } else {
+            canApply = true; // Old rejections without timestamp
+          }
+        }
+        
         return {
           ...job,
           applicationStatus: application ? application.status : null,
-          canApply: !application || ['rejected by mentor', 'rejected by recruiter'].includes(application?.status)
+          canApply,
+          rejectedAt: application?.rejectedAt
         };
       });
       
@@ -102,7 +116,11 @@ export default function StudentJobs() {
     } catch (error) {
       if (!error.message.includes("Authentication")) {
         const errorMsg = error.response?.data?.message || error.message;
-        toast.error(errorMsg);
+        if (errorMsg.includes('Cannot reapply until')) {
+          toast.error(errorMsg, { duration: 5000 });
+        } else {
+          toast.error(errorMsg);
+        }
       }
     }
   };
@@ -204,32 +222,48 @@ export default function StudentJobs() {
 
 
                 
-                {job.applicationStatus ? (
-                  <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-semibold text-center">
-                    {job.applicationStatus === 'pending mentor approval' ? 'Pending Mentor Approval' : 
-                     job.applicationStatus === 'rejected by mentor' ? (
-                       <button
-                         onClick={() => applyJob(job._id)}
-                         className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
-                       >
-                         Apply Again
-                       </button>
-                     ) : job.applicationStatus === 'rejected by recruiter' ? (
-                       <button
-                         onClick={() => applyJob(job._id)}
-                         className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
-                       >
-                         Apply Again
-                       </button>
-                     ) : 'Already Applied'}
-                  </div>
-                ) : (
+                {job.canApply ? (
                   <button
                     onClick={() => applyJob(job._id)}
                     className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
                   >
-                    Apply Now
+                    {job.applicationStatus && ['rejected by mentor', 'rejected by recruiter'].includes(job.applicationStatus) ? 'Apply Again' : 'Apply Now'}
                   </button>
+                ) : (
+                  <div className="w-full">
+                    {job.applicationStatus === 'pending mentor approval' ? (
+                      <div className="bg-yellow-100 text-yellow-700 py-3 rounded-xl font-semibold text-center">
+                        Pending Mentor Approval
+                      </div>
+                    ) : job.applicationStatus === 'pending recruiter review' ? (
+                      <div className="bg-blue-100 text-blue-700 py-3 rounded-xl font-semibold text-center">
+                        Pending Recruiter Review
+                      </div>
+                    ) : job.applicationStatus === 'interview scheduled' ? (
+                      <div className="bg-green-100 text-green-700 py-3 rounded-xl font-semibold text-center">
+                        Interview Scheduled
+                      </div>
+                    ) : job.applicationStatus === 'hired' ? (
+                      <div className="bg-emerald-100 text-emerald-700 py-3 rounded-xl font-semibold text-center">
+                        Hired
+                      </div>
+                    ) : (job.rejectedAt && new Date(job.rejectedAt) > new Date(Date.now() - 60*1000)) ? (
+                      <div className="bg-red-100 text-red-700 py-2 rounded-xl font-semibold text-center text-sm">
+                        <div>Can reapply at</div>
+                        <div className="font-bold">
+                          {new Date(new Date(job.rejectedAt).getTime() + 60*1000).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-100 text-gray-500 py-3 rounded-xl font-semibold text-center">
+                        Already Applied
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             ))}

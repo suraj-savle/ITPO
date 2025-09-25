@@ -43,14 +43,14 @@ const Profile = () => {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   const avatarOptions = [
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=5',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=8'
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=alex',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=mike',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=emma',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=lisa',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=david',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=anna'
   ];
 
   // Initialize formData with proper structure
@@ -303,7 +303,7 @@ const Profile = () => {
             <div className="relative group">
               <div className="relative">
                 <img
-                  src={formData.profileImage || avatarOptions[0]}
+                  src={formData.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name || 'student'}`}
                   alt="Profile"
                   className="w-32 h-32 rounded-full object-cover border-4 border-white/40 shadow-2xl transition-transform group-hover:scale-105"
                 />
