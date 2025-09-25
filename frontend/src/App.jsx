@@ -36,6 +36,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/*" element={<UnderDevelopment />} />
+        <Route path="/*" element={<UnderDevelopment />} />
         
         <Route path="/student" element={<ProtectedRoute><DashboardLayout userRole="student" /></ProtectedRoute>}>
           <Route index element={<StudentHome />} />
