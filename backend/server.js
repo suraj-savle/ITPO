@@ -11,9 +11,7 @@ import jobRoutes from "./routes/jobRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
 
-
 dotenv.config();
-const express = require('express');
 const app = express();
 
 // Middleware
@@ -75,4 +73,4 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 
-module.exports = app;
+
