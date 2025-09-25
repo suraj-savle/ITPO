@@ -168,7 +168,7 @@ export const withdrawApplication = async (req, res) => {
 // Recruiter: take action (reject/schedule/hire)
 export const recruiterDecision = async (req, res) => {
   try {
-    const app = await Application.findById(req.params.id);
+    const app = await Application.findById(req.params.id).populate('student job');
     if (!app) return res.status(404).json({ message: "Application not found" });
 
     if (String(app.recruiter) !== String(req.user._id) && req.user.role !== "admin") {
@@ -189,12 +189,25 @@ export const recruiterDecision = async (req, res) => {
     } else if (action === "hire") {
       app.status = "hired";
       app.recruiterNote = recruiterNote || "";
+      
+      // Update student placement status when hired
+      if (app.student) {
+        const User = (await import('../models/UserModel.js')).default;
+        await User.findByIdAndUpdate(app.student._id, {
+          isPlaced: true,
+          placementDetails: {
+            company: app.job?.company || 'Company Name',
+            roleOffered: app.job?.title || 'Position',
+            package: app.job?.stipend || 'Not specified',
+            placedAt: new Date()
+          }
+        });
+      }
     } else {
       return res.status(400).json({ message: "Invalid action" });
     }
 
     await app.save();
-    // optionally notify student & mentor
     res.json(app);
   } catch (err) {
     console.error(err);

@@ -7,7 +7,8 @@ import {
   scheduleInterview,
   getAllJobsForStudents,
   getMyApplications,
-  deleteJob
+  deleteJob,
+  getJobApplications
 } from "../controllers/jobController.js";
 
 import { protect, recruiterOnly, studentOnly } from "../middleware/authMiddleware.js";
@@ -22,6 +23,7 @@ router.put("/:id/toggle", protect, recruiterOnly, toggleJobActive);
 router.put("/:jobId/schedule/:studentId", protect, recruiterOnly, scheduleInterview);
 
 router.get("/my-applications", protect, getMyApplications);
+router.get("/:jobId/applications", protect, recruiterOnly, getJobApplications);
 router.delete("/:id", protect, recruiterOnly, deleteJob);
 
 export default router;

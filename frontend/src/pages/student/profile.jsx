@@ -714,16 +714,52 @@ const Profile = () => {
                 </div>
               ) : (
                 formData.resumeUrl && (
-                  <a
-                    href={formData.resumeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
-                  >
-                    <FileText size={18} />
-                    View Resume
-                    <ExternalLink size={14} />
-                  </a>
+                  <div className="flex gap-2">
+                    <a
+                      href={formData.resumeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
+                    >
+                      <FileText size={18} />
+                      View Resume
+                      <ExternalLink size={14} />
+                    </a>
+                    {isMentorView && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            const token = localStorage.getItem('token');
+                            const response = await fetch(`http://localhost:5000/api/mentor/student-resume/${studentId}`, {
+                              headers: { 'Authorization': `Bearer ${token}` }
+                            });
+                            
+                            if (response.ok) {
+                              const blob = await response.blob();
+                              const url = window.URL.createObjectURL(blob);
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.download = `${formData.name.replace(/\s+/g, '_')}_Resume.pdf`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              window.URL.revokeObjectURL(url);
+                              toast.success('Download initiated');
+                            } else {
+                              toast.error('Failed to download resume');
+                            }
+                          } catch (error) {
+                            console.error('Error downloading resume:', error);
+                            toast.error('Error downloading resume');
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg"
+                      >
+                        <FileText size={18} />
+                        Download Resume
+                      </button>
+                    )}
+                  </div>
                 )
               )}
             </div>

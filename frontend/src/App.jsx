@@ -13,6 +13,7 @@ import Certificates from "./pages/student/Certificates";
 import Mentees from "./pages/mentor/Mentees";
 import Approvals from "./pages/mentor/Approvals";
 import Progress from "./pages/mentor/Progress";
+import MentorHistory from "./pages/mentor/History";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StudentApprovals from "./pages/admin/StudentApprovals";
 import UserManagement from "./pages/admin/UserManagement";
@@ -22,6 +23,8 @@ import AdminPostSection from "./pages/admin/AdminPostSection";
 import RecruiterJobs from "./pages/recruiter/RecruiterJobs";
 import RecruiterApplications from "./pages/recruiter/RecruiterApplications";
 import RecruiterDashboard from "./pages/recruiter/RecruiterDashboard";
+import RecruiterHistory from "./pages/recruiter/History";
+import JobApplications from "./pages/recruiter/JobApplications";
 import UnderDevelopment from "./pages/UnderDevelopment";
 
 
@@ -47,6 +50,7 @@ function App() {
           <Route index element={<Mentees />} />
           <Route path="approvals" element={<Approvals />} />
           <Route path="progress" element={<Progress />} />
+          <Route path="history" element={<MentorHistory />} />
           <Route path="student/:studentId" element={<Profile />} />
         </Route>
         
@@ -56,6 +60,8 @@ function App() {
           <Route path="students" element={<StudentsList />} />
           <Route path="student/:id" element={<RecruiterStudentProfile />} />
           <Route path="post" element={<RecruiterJobs /> } />
+          <Route path="job/:jobId/applications" element={<JobApplications />} />
+          <Route path="history" element={<RecruiterHistory />} />
         </Route>
         
         <Route path="/admin" element={<ProtectedRoute><DashboardLayout userRole="admin" /></ProtectedRoute>}>

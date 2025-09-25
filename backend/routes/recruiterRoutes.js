@@ -58,6 +58,49 @@ router.get("/student/:id", protect, recruiterOnly, async (req, res) => {
   }
 });
 
+// GET student resume
+router.get("/student-resume/:id", protect, recruiterOnly, async (req, res) => {
+  try {
+    const student = await User.findById(req.params.id).select('resumeUrl name');
+    if (!student) return res.status(404).json({ message: "Student not found" });
+    
+    if (!student.resumeUrl) {
+      return res.status(404).json({ message: 'Resume not found' });
+    }
+
+    const path = await import('path');
+    const fs = await import('fs');
+    const filename = student.resumeUrl.split('/').pop();
+    const filePath = path.default.join('uploads/resumes', filename);
+    
+    if (!fs.default.existsSync(filePath)) {
+      return res.status(404).json({ message: 'Resume file not found' });
+    }
+
+    res.download(filePath, `${student.name.replace(/\s+/g, '_')}_Resume.pdf`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET application history
+router.get("/application-history", protect, recruiterOnly, async (req, res) => {
+  try {
+    const Application = (await import('../models/ApplicationModel.js')).default;
+    const applications = await Application.find({ recruiter: req.user._id })
+      .populate('student', 'name email department year')
+      .populate('job', 'title company')
+      .populate('mentor', 'name email')
+      .sort({ updatedAt: -1 });
+    
+    res.json(applications);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // GET applications for recruiter's jobs (mentor-approved)
 router.get("/applications", protect, recruiterOnly, async (req, res) => {
   try {

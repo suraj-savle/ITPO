@@ -71,6 +71,28 @@ const UserManagement = () => {
     }
   };
 
+  const handleDeleteUser = async (userId, userName) => {
+    if (window.confirm(`Are you sure you want to delete ${userName}? This will also delete all related data.`)) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:5000/api/admin/delete-user/${userId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          fetchUsers();
+          alert('User deleted successfully');
+        } else {
+          alert('Failed to delete user');
+        }
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Error deleting user');
+      }
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -107,6 +129,7 @@ const UserManagement = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -135,6 +158,16 @@ const UserManagement = () => {
                   {user.role === 'student' && `${user.department} - Year ${user.year}`}
                   {user.role === 'mentor' && user.department}
                   {user.role === 'recruiter' && user.companyName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {user.role !== 'admin' && (
+                    <button
+                      onClick={() => handleDeleteUser(user._id, user.name)}
+                      className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

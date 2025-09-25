@@ -84,19 +84,19 @@ export const updatePlacementStatus = async (req, res) => {
 
 export const getPendingApplications = async (req, res) => {
   try {
-    const applications = await Application.find({ status: "applied" })
-      .populate('studentId', 'name email department year rollNo assignedMentor')
-      .populate('jobId', 'title company location')
+    const applications = await Application.find({ status: "pending mentor approval" })
+      .populate('student', 'name email department year rollNo assignedMentor profileImage')
+      .populate('job', 'title company location')
       .sort({ createdAt: -1 });
 
     // Filter applications from students assigned to this mentor
     const mentorApplications = applications.filter(app => 
-      app.studentId && 
-      app.studentId.assignedMentor && 
-      app.studentId.assignedMentor.toString() === req.user._id.toString()
+      app.student && 
+      app.student.assignedMentor && 
+      app.student.assignedMentor.toString() === req.user._id.toString()
     );
 
-    res.json({ success: true, applications: mentorApplications });
+    res.json(mentorApplications);
   } catch (err) {
     res.status(500).json({ message: "Server Error", error: err.message });
   }

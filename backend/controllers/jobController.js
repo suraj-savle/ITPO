@@ -211,3 +211,21 @@ export const getMyApplications = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+export const getJobApplications = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    
+    const applications = await Application.find({ job: jobId })
+      .populate('student', 'name email department year cgpa skills profileImage resumeUrl')
+      .populate('job', 'title company location')
+      .sort({ createdAt: -1 });
+
+    const job = await Job.findById(jobId).select('title company location');
+    
+    res.json({ applications, job });
+  } catch (err) {
+    console.error("Get Job Applications Error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};

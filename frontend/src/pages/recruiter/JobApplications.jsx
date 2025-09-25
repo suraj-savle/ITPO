@@ -1,31 +1,35 @@
 import { useState, useEffect } from 'react';
-import { User, Briefcase, Calendar, Download, CheckCircle, X, Clock } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, User, Download, Calendar, CheckCircle, X, Clock } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const StudentsList = () => {
+const JobApplications = () => {
+  const { jobId } = useParams();
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
+  const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem('token');
 
-  const fetchApplications = async () => {
+  useEffect(() => {
+    fetchJobApplications();
+  }, [jobId]);
+
+  const fetchJobApplications = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/recruiter/applications', {
+      const res = await axios.get(`http://localhost:5000/api/jobs/${jobId}/applications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setApplications(res.data);
+      setApplications(res.data.applications || []);
+      setJob(res.data.job);
     } catch (error) {
       toast.error('Failed to load applications');
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchApplications();
-    const interval = setInterval(fetchApplications, 10000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleDecision = async (applicationId, action, interviewDate = null) => {
     try {
@@ -36,7 +40,7 @@ const StudentsList = () => {
       );
       
       toast.success(`Application ${action}d successfully!`);
-      fetchApplications();
+      fetchJobApplications();
     } catch (error) {
       toast.error(`Failed to ${action} application`);
     }
@@ -70,24 +74,29 @@ const StudentsList = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => navigate('/recruiter/post')}
+          className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Jobs
+        </button>
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Student Applications</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Applications for {job?.title}
+          </h1>
           <p className="text-sm text-gray-500 mt-1">
-            {applications.length} applications awaiting review
+            {applications.length} applications received
           </p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-          {applications.length} total
         </div>
       </div>
 
       {applications.length === 0 ? (
         <div className="text-center py-16">
-          <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-600 mb-2">No Applications</h3>
-          <p className="text-gray-500">Mentor-approved applications will appear here</p>
+          <p className="text-gray-500">No applications received for this job yet</p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -112,16 +121,14 @@ const StudentsList = () => {
                 {getStatusBadge(app.status)}
               </div>
 
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-1">{app.job?.title}</h4>
-                <p className="text-sm text-gray-600">{app.job?.company} • {app.job?.location}</p>
-                {app.interviewDate && (
-                  <div className="flex items-center gap-1 mt-2 text-sm text-blue-600">
+              {app.interviewDate && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-2 text-blue-700">
                     <Calendar className="w-4 h-4" />
-                    Interview: {new Date(app.interviewDate).toLocaleDateString()}
+                    Interview scheduled: {new Date(app.interviewDate).toLocaleDateString()}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="flex items-center justify-between">
                 <div className="flex gap-2">
@@ -200,4 +207,4 @@ const StudentsList = () => {
   );
 };
 
-export default StudentsList;
+export default JobApplications;

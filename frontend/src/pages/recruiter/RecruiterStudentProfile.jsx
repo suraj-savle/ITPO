@@ -196,25 +196,9 @@ const RecruiterStudentProfile = () => {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    console.log('Full student object:', student);
-                    console.log('Student resume URL:', student.resumeUrl);
-                    console.log('Resume URL type:', typeof student.resumeUrl);
-                    
                     if (student.resumeUrl && student.resumeUrl.trim() !== '') {
-                      try {
-                        console.log('Attempting to open:', student.resumeUrl);
-                        const opened = window.open(student.resumeUrl, '_blank');
-                        if (!opened) {
-                          toast.error('Popup blocked. Please allow popups and try again.');
-                        } else {
-                          toast.success('Opening resume...');
-                        }
-                      } catch (error) {
-                        console.error('Error opening resume:', error);
-                        toast.error('Error opening resume');
-                      }
+                      window.open(student.resumeUrl, '_blank');
                     } else {
-                      console.log('No resume URL found');
                       toast.error('No resume uploaded');
                     }
                   }}
@@ -224,28 +208,34 @@ const RecruiterStudentProfile = () => {
                   View Resume
                 </button>
                 <button
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.preventDefault();
-                    console.log('Download - Student resume URL:', student.resumeUrl);
-                    
                     if (student.resumeUrl && student.resumeUrl.trim() !== '') {
                       try {
-                        console.log('Creating download link for:', student.resumeUrl);
-                        const link = document.createElement('a');
-                        link.href = student.resumeUrl;
-                        link.download = `${student.name.replace(/\s+/g, '_')}_Resume.pdf`;
-                        link.target = '_blank';
-                        document.body.appendChild(link);
-                        console.log('Clicking download link');
-                        link.click();
-                        document.body.removeChild(link);
-                        toast.success('Download initiated');
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`http://localhost:5000/api/recruiter/student-resume/${student._id}`, {
+                          headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        
+                        if (response.ok) {
+                          const blob = await response.blob();
+                          const url = window.URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.download = `${student.name.replace(/\s+/g, '_')}_Resume.pdf`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          window.URL.revokeObjectURL(url);
+                          toast.success('Download initiated');
+                        } else {
+                          toast.error('Failed to download resume');
+                        }
                       } catch (error) {
                         console.error('Error downloading resume:', error);
                         toast.error('Error downloading resume');
                       }
                     } else {
-                      console.log('No resume URL for download');
                       toast.error('No resume uploaded');
                     }
                   }}

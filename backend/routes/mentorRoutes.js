@@ -57,6 +57,51 @@ router.get("/student-profile/:studentId", async (req, res) => {
   }
 });
 
+router.get("/student-resume/:studentId", async (req, res) => {
+  try {
+    const User = (await import('../models/UserModel.js')).default;
+    const student = await User.findOne({ 
+      _id: req.params.studentId, 
+      assignedMentor: req.user._id 
+    }).select('resumeUrl name');
+    
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found or not your mentee' });
+    }
+    
+    if (!student.resumeUrl) {
+      return res.status(404).json({ message: 'Resume not found' });
+    }
+
+    const path = await import('path');
+    const fs = await import('fs');
+    const filename = student.resumeUrl.split('/').pop();
+    const filePath = path.default.join('uploads/resumes', filename);
+    
+    if (!fs.default.existsSync(filePath)) {
+      return res.status(404).json({ message: 'Resume file not found' });
+    }
+
+    res.download(filePath, `${student.name.replace(/\s+/g, '_')}_Resume.pdf`);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get("/application-history", async (req, res) => {
+  try {
+    const Application = (await import('../models/ApplicationModel.js')).default;
+    const applications = await Application.find({ mentor: req.user._id })
+      .populate('student', 'name email department year')
+      .populate('job', 'title company')
+      .sort({ updatedAt: -1 });
+    
+    res.json(applications);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.get("/mentee-applications/:studentId", getMenteeApplications);
 router.put("/update-placement/:studentId", updatePlacementStatus);
 

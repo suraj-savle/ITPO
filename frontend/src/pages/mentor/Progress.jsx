@@ -1,278 +1,269 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Calendar, Award, AlertCircle, CheckCircle, X, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Activity, Users, CheckCircle, Clock, XCircle, TrendingUp, User, Briefcase } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { makeAuthenticatedRequest, isTokenValid, handleAuthError } from '../../utils/auth';
 
 const Progress = () => {
-  const [students, setStudents] = useState([]);
+  const [mentees, setMentees] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0, placed: 0 });
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchProgressData();
-    const interval = setInterval(fetchProgressData, 3000); // Update every 3 seconds
+    fetchData();
+    const interval = setInterval(() => {
+      fetchData();
+      setLastUpdate(new Date());
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const fetchProgressData = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
+  const fetchData = async () => {
+    if (!isTokenValid()) {
+      handleAuthError(navigate);
       return;
     }
 
     try {
-      const appsRes = await axios.get('http://localhost:5000/api/applications/mentor', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const [menteesRes, appsRes] = await Promise.all([
+        makeAuthenticatedRequest('http://localhost:5000/api/mentor/mentees', {}, navigate),
+        makeAuthenticatedRequest('http://localhost:5000/api/mentor/application-history', {}, navigate)
+      ]);
       
-      setApplications(appsRes.data || []);
-      setStudents([]);
+      const menteesData = await menteesRes.json();
+      const appsData = await appsRes.json();
+      
+      setMentees(menteesData.mentees || []);
+      setApplications(appsData || []);
+      
+      // Calculate stats
+      const totalApps = appsData.length;
+      const pending = appsData.filter(app => app.status === 'pending mentor approval').length;
+      const approved = appsData.filter(app => app.status === 'pending recruiter review' || app.status === 'interview scheduled' || app.status === 'hired').length;
+      const rejected = appsData.filter(app => app.status === 'rejected by mentor').length;
+      const placed = menteesData.mentees?.filter(m => m.isPlaced).length || 0;
+      
+      setStats({ total: totalApps, pending, approved, rejected, placed });
     } catch (err) {
-      console.error('Error:', err);
-      setApplications([]);
-      setStudents([]);
+      if (!err.message.includes('Authentication')) {
+        console.error('Error fetching data:', err);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const updatePlacementStatus = async (studentId, isPlaced, placementDetails = null) => {
-    const token = localStorage.getItem('token');
-    try {
-      const res = await fetch(`http://localhost:5000/api/mentor/update-placement/${studentId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ isPlaced, placementDetails })
-      });
-
-      if (!res.ok) throw new Error('Failed to update placement status');
-
-      const data = await res.json();
-      toast.success(data.message);
-      
-      // Refresh data
-      fetchProgressData();
-      setShowModal(false);
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to update placement status');
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending mentor approval': return 'text-yellow-600 bg-yellow-50';
+      case 'pending recruiter review': return 'text-blue-600 bg-blue-50';
+      case 'interview scheduled': return 'text-purple-600 bg-purple-50';
+      case 'hired': return 'text-green-600 bg-green-50';
+      case 'rejected by mentor': 
+      case 'rejected by recruiter': return 'text-red-600 bg-red-50';
+      default: return 'text-gray-600 bg-gray-50';
     }
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      applied: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Applied' },
-      shortlisted: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Shortlisted' },
-      interview: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Interview' },
-      selected: { bg: 'bg-green-100', text: 'text-green-800', label: 'Selected' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rejected' }
-    };
-
-    const config = statusConfig[status] || statusConfig.applied;
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs ${config.bg} ${config.text}`}>
-        {config.label}
-      </span>
-    );
-  };
-
-  const getPlacementBadge = (isPlaced) => {
-    return isPlaced 
-      ? <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-          <Award size={14} /> Placed
-        </span>
-      : <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-          <AlertCircle size={14} /> Unplaced
-        </span>;
+  const getRecentActivity = () => {
+    return applications
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      .slice(0, 5);
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading progress data...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex items-center gap-2 text-gray-500">
+          <Activity className="w-5 h-5 animate-pulse" />
+          Loading progress data...
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-4">Progress Tracking</h1>
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Progress Tracking</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Last updated: {lastUpdate.toLocaleTimeString()}
+            <span className="inline-flex items-center ml-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="ml-1 text-xs">Live</span>
+            </span>
+          </p>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <Briefcase className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-gray-900">{stats.total}</p>
+              <p className="text-sm text-gray-500">Total Apps</p>
+            </div>
+          </div>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="flex items-center">
-              <ThumbsUp className="w-6 h-6 text-green-600 mr-2" />
-              <div>
-                <p className="text-sm text-gray-600">Approved</p>
-                <p className="text-xl font-bold">{applications.filter(app => app.status === 'pending recruiter review').length}</p>
-              </div>
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-yellow-50 rounded-lg">
+              <Clock className="w-5 h-5 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-gray-900">{stats.pending}</p>
+              <p className="text-sm text-gray-500">Pending</p>
             </div>
           </div>
-          
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="flex items-center">
-              <ThumbsDown className="w-6 h-6 text-red-600 mr-2" />
-              <div>
-                <p className="text-sm text-gray-600">Rejected</p>
-                <p className="text-xl font-bold">{applications.filter(app => app.status === 'rejected by mentor').length}</p>
-              </div>
+        </div>
+        
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-50 rounded-lg">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-gray-900">{stats.approved}</p>
+              <p className="text-sm text-gray-500">Approved</p>
             </div>
           </div>
-          
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="flex items-center">
-              <AlertCircle className="w-6 h-6 text-yellow-600 mr-2" />
-              <div>
-                <p className="text-sm text-gray-600">Pending</p>
-                <p className="text-xl font-bold">{applications.filter(app => app.status === 'pending mentor approval').length}</p>
-              </div>
+        </div>
+        
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-50 rounded-lg">
+              <XCircle className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-gray-900">{stats.rejected}</p>
+              <p className="text-sm text-gray-500">Rejected</p>
             </div>
           </div>
-          
-          <div className="bg-white p-4 rounded-lg shadow">
-            <div className="flex items-center">
-              <Award className="w-6 h-6 text-blue-600 mr-2" />
-              <div>
-                <p className="text-sm text-gray-600">Total Applications</p>
-                <p className="text-xl font-bold">{applications.length}</p>
-              </div>
+        </div>
+        
+        <div className="bg-white rounded-xl p-4 border border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-50 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-semibold text-gray-900">{stats.placed}</p>
+              <p className="text-sm text-gray-500">Placed</p>
             </div>
           </div>
         </div>
       </div>
 
-      {students.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No students assigned for progress tracking.</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {students.map((student) => (
-            <div key={student._id} className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={student.profileImage || "https://via.placeholder.com/48"}
-                    alt={student.name}
-                    className="w-12 h-12 rounded-full"
-                  />
-                  <div>
-                    <h3 className="font-semibold text-lg">{student.name}</h3>
-                    <p className="text-gray-600 text-sm">{student.email} • {student.year}</p>
-                    <p className="text-gray-500 text-sm">Roll: {student.rollNo} • CGPA: {student.cgpa}</p>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                      <span>{student.totalApplications} Applications</span>
-                      <span>{student.interviews} Interviews</span>
-                      <span>{student.offers} Offers</span>
-                    </div>
-                  </div>
+      {/* Main Content Grid */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Mentees Overview */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-xl border border-gray-100">
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                My Mentees ({mentees.length})
+              </h2>
+            </div>
+            <div className="p-6">
+              {mentees.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No mentees assigned yet</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  {getPlacementBadge(student.isPlaced)}
-                  <button
-                    onClick={() => {
-                      setSelectedStudent(student);
-                      setShowModal(true);
-                    }}
-                    className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                  >
-                    Update Status
-                  </button>
-                </div>
-              </div>
-
-              {student.isPlaced && student.placementDetails && (
-                <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
-                  <h4 className="font-medium text-green-800 mb-1">Placement Details</h4>
-                  <p className="text-sm text-green-700">
-                    Company: {student.placementDetails.company} | 
-                    Role: {student.placementDetails.roleOffered} | 
-                    Package: {student.placementDetails.package}
-                  </p>
-                </div>
-              )}
-
-              <div className="mb-4">
-                <h4 className="font-medium mb-3 flex items-center gap-2">
-                  <TrendingUp size={18} />
-                  Recent Applications
-                </h4>
-                {student.applications.length > 0 ? (
-                  <div className="space-y-2">
-                    {student.applications.map((app, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <span className="font-medium">{app.company}</span>
-                          <p className="text-sm text-gray-600">{app.jobTitle}</p>
-                          <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                            <Calendar size={14} />
-                            {new Date(app.appliedDate).toLocaleDateString()}
+              ) : (
+                <div className="space-y-4">
+                  {mentees.map((mentee) => {
+                    const menteeApps = applications.filter(app => app.student?._id === mentee._id);
+                    return (
+                      <div key={mentee._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={mentee.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${mentee.name}`}
+                            alt={mentee.name}
+                            className="w-10 h-10 rounded-full"
+                          />
+                          <div>
+                            <h3 className="font-medium text-gray-900">{mentee.name}</h3>
+                            <p className="text-sm text-gray-500">{mentee.department} • {mentee.year}</p>
                           </div>
                         </div>
-                        {getStatusBadge(app.status)}
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-gray-900">{menteeApps.length} apps</p>
+                            <p className="text-xs text-gray-500">CGPA: {mentee.cgpa}</p>
+                          </div>
+                          <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            mentee.isPlaced ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {mentee.isPlaced ? 'Placed' : 'Active'}
+                          </div>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 italic">No applications yet</p>
-                )}
-              </div>
-
-              {!student.isPlaced && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-yellow-800 mb-2">
-                    <AlertCircle size={16} />
-                    <span className="font-medium">Needs Attention</span>
-                  </div>
-                  <p className="text-sm text-yellow-700">
-                    Student hasn't secured placement yet. Consider providing guidance on resume improvement or suggesting better-fit opportunities.
-                  </p>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Update Status Modal */}
-      {showModal && selectedStudent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Update Placement Status</h3>
-            <p className="text-sm text-gray-600 mb-4">{selectedStudent.name}</p>
-            
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md flex items-center gap-2"
-              >
-                <X size={16} /> Cancel
-              </button>
-              {!selectedStudent.isPlaced && (
-                <button
-                  onClick={() => updatePlacementStatus(selectedStudent._id, true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
-                >
-                  <CheckCircle size={16} /> Mark as Placed
-                </button>
-              )}
-              {selectedStudent.isPlaced && (
-                <button
-                  onClick={() => updatePlacementStatus(selectedStudent._id, false)}
-                  className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 flex items-center gap-2"
-                >
-                  <AlertCircle size={16} /> Mark as Unplaced
-                </button>
               )}
             </div>
           </div>
         </div>
-      )}
+
+        {/* Recent Activity */}
+        <div>
+          <div className="bg-white rounded-xl border border-gray-100">
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Activity className="w-5 h-5" />
+                Recent Activity
+              </h2>
+            </div>
+            <div className="p-6">
+              {getRecentActivity().length === 0 ? (
+                <div className="text-center py-8">
+                  <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">No recent activity</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {getRecentActivity().map((app) => (
+                    <div key={app._id} className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        <div className={`w-2 h-2 rounded-full mt-2 ${getStatusColor(app.status).split(' ')[0].replace('text-', 'bg-')}`}></div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {app.student?.name}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {app.job?.title}
+                        </p>
+                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${getStatusColor(app.status)}`}>
+                          {app.status}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(app.updatedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+
     </div>
   );
 };

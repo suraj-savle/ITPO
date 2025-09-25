@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Briefcase, Calendar, TrendingUp, Eye, Plus } from 'lucide-react';
+import { Users, Briefcase, Calendar, TrendingUp, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -25,25 +25,21 @@ const RecruiterDashboard = () => {
       }
 
       try {
-        // Fetch recruiter jobs
         const jobsRes = await axios.get('http://localhost:5000/api/jobs/recruiter', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const jobs = jobsRes.data || [];
 
-        // Fetch approved students
         const studentsRes = await axios.get('http://localhost:5000/api/recruiter/students', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const students = studentsRes.data || [];
 
-        // Fetch applications
         const appsRes = await axios.get('http://localhost:5000/api/applications/recruiter', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const applications = appsRes.data || [];
 
-        // Calculate stats
         setStats({
           totalJobs: jobs.length,
           activeJobs: jobs.filter(job => job.isActive).length,
@@ -63,84 +59,84 @@ const RecruiterDashboard = () => {
     };
 
     fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 30000);
+    return () => clearInterval(interval);
   }, [navigate]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Loading dashboard...</div>
+        <div className="flex items-center gap-2 text-gray-500">
+          <Clock className="w-5 h-5 animate-pulse" />
+          Loading dashboard...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            Recruiter Dashboard
-          </h1>
-          <p className="text-gray-600">Overview of your recruitment activities</p>
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-1">Overview of your recruitment activities</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-gray-100 p-6">
+          <div className="flex items-center justify-between">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <Briefcase className="w-5 h-5 text-blue-600" />
+            </div>
+            <span className="text-2xl font-semibold text-gray-900">{stats.totalJobs}</span>
+          </div>
+          <h3 className="font-medium text-gray-900 mt-4">Total Jobs</h3>
+          <p className="text-sm text-gray-500">Posted positions</p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
-                <Briefcase size={24} className="text-white" />
-              </div>
-              <span className="text-2xl font-bold text-blue-600">{stats.totalJobs}</span>
+        <div className="bg-white rounded-xl border border-gray-100 p-6">
+          <div className="flex items-center justify-between">
+            <div className="p-2 bg-green-50 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-green-600" />
             </div>
-            <h3 className="font-semibold text-gray-800">Total Jobs</h3>
-            <p className="text-gray-600 text-sm">Posted positions</p>
+            <span className="text-2xl font-semibold text-gray-900">{stats.activeJobs}</span>
           </div>
-
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
-                <TrendingUp size={24} className="text-white" />
-              </div>
-              <span className="text-2xl font-bold text-green-600">{stats.activeJobs}</span>
-            </div>
-            <h3 className="font-semibold text-gray-800">Active Jobs</h3>
-            <p className="text-gray-600 text-sm">Currently recruiting</p>
-          </div>
-
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
-                <Calendar size={24} className="text-white" />
-              </div>
-              <span className="text-2xl font-bold text-purple-600">{stats.totalApplications}</span>
-            </div>
-            <h3 className="font-semibold text-gray-800">Applications</h3>
-            <p className="text-gray-600 text-sm">Total received</p>
-          </div>
-
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl">
-                <Users size={24} className="text-white" />
-              </div>
-              <span className="text-2xl font-bold text-orange-600">{stats.approvedStudents}</span>
-            </div>
-            <h3 className="font-semibold text-gray-800">Approved Students</h3>
-            <p className="text-gray-600 text-sm">Ready to recruit</p>
-          </div>
+          <h3 className="font-medium text-gray-900 mt-4">Active Jobs</h3>
+          <p className="text-sm text-gray-500">Currently recruiting</p>
         </div>
 
-        {/* Recent Jobs */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20 mb-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Jobs</h2>
+        <div className="bg-white rounded-xl border border-gray-100 p-6">
+          <div className="flex items-center justify-between">
+            <div className="p-2 bg-purple-50 rounded-lg">
+              <Calendar className="w-5 h-5 text-purple-600" />
+            </div>
+            <span className="text-2xl font-semibold text-gray-900">{stats.totalApplications}</span>
+          </div>
+          <h3 className="font-medium text-gray-900 mt-4">Applications</h3>
+          <p className="text-sm text-gray-500">Total received</p>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 p-6">
+          <div className="flex items-center justify-between">
+            <div className="p-2 bg-orange-50 rounded-lg">
+              <Users className="w-5 h-5 text-orange-600" />
+            </div>
+            <span className="text-2xl font-semibold text-gray-900">{stats.approvedStudents}</span>
+          </div>
+          <h3 className="font-medium text-gray-900 mt-4">Approved Students</h3>
+          <p className="text-sm text-gray-500">Ready to recruit</p>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl border border-gray-100 p-6">
+          <h2 className="font-semibold text-gray-900 mb-4">Recent Jobs</h2>
           <div className="space-y-3">
             {recentJobs.length > 0 ? (
               recentJobs.map((job) => (
                 <div key={job._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <h4 className="font-medium text-gray-800">{job.title}</h4>
-                    <p className="text-sm text-gray-600">{job.location}</p>
+                    <h4 className="font-medium text-gray-900">{job.title}</h4>
+                    <p className="text-sm text-gray-500">{job.location}</p>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     job.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -155,51 +151,29 @@ const RecruiterDashboard = () => {
           </div>
         </div>
 
-        {/* Recent Applications */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Applications</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Student</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Job</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Applied</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentApplications.length > 0 ? (
-                  recentApplications.map((app) => (
-                    <tr key={app._id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4">
-                        <div>
-                          <div className="font-medium text-gray-800">{app.student?.name}</div>
-                          <div className="text-sm text-gray-600">{app.student?.email}</div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-gray-800">{app.job?.title}</div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                          {app.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
-                        {new Date(app.createdAt).toLocaleDateString()}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="py-8 text-center text-gray-500">
-                      No applications received yet
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <div className="bg-white rounded-xl border border-gray-100 p-6">
+          <h2 className="font-semibold text-gray-900 mb-4">Recent Applications</h2>
+          <div className="space-y-3">
+            {recentApplications.length > 0 ? (
+              recentApplications.map((app) => (
+                <div key={app._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <h4 className="font-medium text-gray-900">{app.student?.name}</h4>
+                    <p className="text-sm text-gray-500">{app.job?.title}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                      {app.status?.replace('pending recruiter review', 'Pending')?.replace('interview scheduled', 'Interview')}
+                    </span>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(app.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm">No applications received yet</p>
+            )}
           </div>
         </div>
       </div>

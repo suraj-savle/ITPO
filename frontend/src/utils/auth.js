@@ -9,9 +9,9 @@ export const handleAuthError = (navigate) => {
 export const makeAuthenticatedRequest = async (url, options = {}, navigate) => {
   const token = localStorage.getItem("token");
   
-  if (!token) {
+  if (!token || !isTokenValid()) {
     handleAuthError(navigate);
-    throw new Error("No authentication token found");
+    throw new Error("No valid authentication token found");
   }
 
   const defaultHeaders = {
@@ -36,6 +36,7 @@ export const makeAuthenticatedRequest = async (url, options = {}, navigate) => {
     
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
+        console.log('Authentication failed, clearing token');
         handleAuthError(navigate);
         throw new Error("Authentication failed");
       }
@@ -66,6 +67,7 @@ export const isTokenValid = () => {
     
     return payload.exp > currentTime;
   } catch (error) {
+    console.error('Token validation error:', error);
     return false;
   }
 };

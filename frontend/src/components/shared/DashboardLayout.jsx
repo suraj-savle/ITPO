@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Award,
   Megaphone,
+  History,
 } from "lucide-react";
 
 const DashboardLayout = ({ userRole = "student" }) => {
@@ -91,6 +92,11 @@ const DashboardLayout = ({ userRole = "student" }) => {
           label: "Progress Tracking",
           icon: BarChart3,
         },
+        {
+          path: "/mentor/history",
+          label: "Application History",
+          icon: History,
+        },
       ],
     },
     recruiter: {
@@ -99,6 +105,11 @@ const DashboardLayout = ({ userRole = "student" }) => {
         { path: "/recruiter", label: "Dashboard", icon: BarChart3 },
         { path: "/recruiter/students", label: "Students", icon: Users },
         { path: "/recruiter/post", label: "Job Posts", icon: Briefcase },
+        {
+          path: "/recruiter/history",
+          label: "Application History",
+          icon: History,
+        },
       ],
     },
     admin: {

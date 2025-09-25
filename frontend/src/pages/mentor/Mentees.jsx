@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Eye } from 'lucide-react';
+import { Eye, User, GraduationCap, Award, TrendingUp, Mail, Phone } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { makeAuthenticatedRequest, isTokenValid, handleAuthError } from '../../utils/auth';
 
 const Mentees = () => {
   const [mentees, setMentees] = useState([]);
@@ -9,112 +10,141 @@ const Mentees = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchMentees = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
+    fetchMentees();
+    const interval = setInterval(fetchMentees, 10000); // Refresh every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
 
-      try {
-        const res = await fetch('http://localhost:5000/api/mentor/mentees', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+  const fetchMentees = async () => {
+    if (!isTokenValid()) {
+      handleAuthError(navigate);
+      return;
+    }
 
-        if (!res.ok) {
-          if (res.status === 401) {
-            localStorage.removeItem('token');
-            navigate('/login');
-            return;
-          }
-          throw new Error('Failed to fetch mentees');
-        }
-
-        const data = await res.json();
-        setMentees(data.mentees || []);
-      } catch (err) {
+    try {
+      const res = await makeAuthenticatedRequest(
+        'http://localhost:5000/api/mentor/mentees',
+        {},
+        navigate
+      );
+      const data = await res.json();
+      setMentees(data.mentees || []);
+    } catch (err) {
+      if (!err.message.includes('Authentication')) {
         console.error(err);
         toast.error('Failed to load mentees');
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchMentees();
-  }, [navigate]);
-
-  const getStatusBadge = (isPlaced) => {
-    return isPlaced 
-      ? <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Placed</span>
-      : <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Unplaced</span>;
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading mentees...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex items-center gap-2 text-gray-500">
+          <User className="w-5 h-5 animate-pulse" />
+          Loading mentees...
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Mentees</h1>
-        <div className="text-sm text-gray-600">
-          {mentees.length} students assigned
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">My Mentees</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {mentees.length} students assigned • Updates every 10 seconds
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          Live
         </div>
       </div>
 
       {mentees.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No mentees assigned yet.</p>
+        <div className="text-center py-16">
+          <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-600 mb-2">No mentees assigned yet</h3>
+          <p className="text-gray-500">Students will appear here once assigned by admin</p>
         </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {mentees.map((mentee) => (
-            <div key={mentee._id} className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-4">
+            <div key={mentee._id} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+              {/* Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
                   <img
-                    src={mentee.profileImage || "https://via.placeholder.com/48"}
+                    src={mentee.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${mentee.name}`}
                     alt={mentee.name}
-                    className="w-12 h-12 rounded-full"
+                    className="w-12 h-12 rounded-full border-2 border-gray-100"
                   />
-                  <div>
-                    <h3 className="font-semibold text-lg">{mentee.name}</h3>
-                    <p className="text-gray-600 text-sm">{mentee.email}</p>
-                    <p className="text-gray-500 text-sm">{mentee.department} • {mentee.year}</p>
-                    <p className="text-gray-500 text-sm">Roll No: {mentee.rollNo}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 truncate">{mentee.name}</h3>
+                    <p className="text-xs text-gray-500 truncate">{mentee.rollNo}</p>
                   </div>
                 </div>
-                {getStatusBadge(mentee.isPlaced)}
-              </div>
-
-              <div className="grid md:grid-cols-4 gap-4 mb-4">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{mentee.appliedJobs?.length || 0}</div>
-                  <div className="text-sm text-gray-600">Applications</div>
-                </div>
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{mentee.cgpa || 0}</div>
-                  <div className="text-sm text-gray-600">CGPA</div>
-                </div>
-                <div className="bg-purple-50 p-3 rounded-lg">
-                  <div className="text-sm font-medium text-purple-600">Skills</div>
-                  <div className="text-sm text-gray-600">{mentee.skills?.length || 0} skills</div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-sm font-medium text-gray-600">Status</div>
-                  <div className="text-sm text-gray-800 capitalize">{mentee.status}</div>
+                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  mentee.isPlaced 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {mentee.isPlaced ? 'Placed' : 'Active'}
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => navigate(`/mentor/student/${mentee._id}`)}
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-                >
-                  <Eye size={16} />
-                  View Profile
-                </button>
+              {/* Info */}
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <GraduationCap className="w-4 h-4" />
+                  <span className="truncate">{mentee.department}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Award className="w-4 h-4" />
+                  <span>CGPA: {mentee.cgpa || 'N/A'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <TrendingUp className="w-4 h-4" />
+                  <span>{mentee.year}</span>
+                </div>
               </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-blue-50 rounded-lg p-2 text-center">
+                  <div className="text-lg font-bold text-blue-600">{mentee.appliedJobs?.length || 0}</div>
+                  <div className="text-xs text-gray-600">Applications</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-2 text-center">
+                  <div className="text-lg font-bold text-purple-600">{mentee.skills?.length || 0}</div>
+                  <div className="text-xs text-gray-600">Skills</div>
+                </div>
+              </div>
+
+              {/* Placement Details */}
+              {mentee.isPlaced && mentee.placementDetails && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                  <div className="text-xs font-medium text-green-800 mb-1">Placement Details</div>
+                  <div className="text-xs text-green-700">
+                    <div className="truncate">{mentee.placementDetails.company}</div>
+                    <div className="truncate">{mentee.placementDetails.roleOffered}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action */}
+              <button 
+                onClick={() => navigate(`/mentor/student/${mentee._id}`)}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+              >
+                <Eye size={16} />
+                View Profile
+              </button>
             </div>
           ))}
         </div>
