@@ -37,6 +37,7 @@ function App() {
         <Route path="/student" element={<ProtectedRoute><DashboardLayout userRole="student" /></ProtectedRoute>}>
           <Route index element={<StudentHome />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="profile/:studentId" element={<Profile />} />
           <Route path="jobs" element={<JobOpenings />} />
           <Route path="applications" element={<Applications />} />
           <Route path="certificates" element={<Certificates />} />
@@ -46,6 +47,7 @@ function App() {
           <Route index element={<Mentees />} />
           <Route path="approvals" element={<Approvals />} />
           <Route path="progress" element={<Progress />} />
+          <Route path="student/:studentId" element={<Profile />} />
         </Route>
         
         <Route path="/recruiter" element={<ProtectedRoute><DashboardLayout userRole="recruiter" /></ProtectedRoute>}>

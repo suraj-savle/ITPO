@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, MessageCircle, TrendingUp } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -107,17 +107,12 @@ const Mentees = () => {
               </div>
 
               <div className="flex gap-2">
-                <button className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                <button 
+                  onClick={() => navigate(`/mentor/student/${mentee._id}`)}
+                  className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                >
                   <Eye size={16} />
-                  View Details
-                </button>
-                <button className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
-                  <MessageCircle size={16} />
-                  Send Message
-                </button>
-                <button className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
-                  <TrendingUp size={16} />
-                  Track Progress
+                  View Profile
                 </button>
               </div>
             </div>

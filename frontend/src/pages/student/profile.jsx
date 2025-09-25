@@ -28,14 +28,16 @@ import {
   Save,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { handleAuthError, makeAuthenticatedRequest, isTokenValid } from "../../utils/auth";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { studentId } = useParams();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [isEditing, setIsEditing] = useState(false);
+  const [isMentorView, setIsMentorView] = useState(false);
   const [resume, setResume] = useState(null);
   const [resumePreview, setResumePreview] = useState("");
   const [showAvatarModal, setShowAvatarModal] = useState(false);
@@ -96,8 +98,21 @@ const Profile = () => {
       }
 
       try {
+          // Check if this is mentor viewing student profile
+        const isMentor = studentId !== undefined;
+        setIsMentorView(isMentor);
+        
+        // Disable editing for mentor view
+        if (isMentor) {
+          setIsEditing(false);
+        }
+        
+        const endpoint = isMentor 
+          ? `http://localhost:5000/api/mentor/student-profile/${studentId}`
+          : "http://localhost:5000/api/student/profile";
+          
         const res = await makeAuthenticatedRequest(
-          "http://localhost:5000/api/student/profile",
+          endpoint,
           {},
           navigate
         );
@@ -117,7 +132,10 @@ const Profile = () => {
         }
       } catch (err) {
         console.error("Profile fetch error:", err);
-        if (!err.message.includes("Authentication")) {
+        if (err.message.includes("403") || err.message.includes("401")) {
+          toast.error("Access denied");
+          navigate('/mentor');
+        } else if (!err.message.includes("Authentication")) {
           toast.error("Failed to load profile");
         }
       } finally {
@@ -236,12 +254,20 @@ const Profile = () => {
         {/* Modern Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
+            {isMentorView && (
+              <button
+                onClick={() => navigate('/mentor')}
+                className="mb-4 flex items-center gap-2 text-blue-600 hover:text-blue-800"
+              >
+                ← Back to Mentees
+              </button>
+            )}
             <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              My Profile
+              {isMentorView ? 'Student Profile' : 'My Profile'}
             </h1>
-            <p className="text-gray-600 mt-1">Manage your personal information and preferences</p>
+            <p className="text-gray-600 mt-1">{isMentorView ? 'View student information and details' : 'Manage your personal information and preferences'}</p>
           </div>
-          {isEditing ? (
+          {!isMentorView && (isEditing ? (
             <div className="flex gap-3">
               <button
                 onClick={() => setIsEditing(false)}
@@ -265,7 +291,7 @@ const Profile = () => {
               <Edit3 size={20} />
               Edit Profile
             </button>
-          )}
+          ))}
         </div>
 
       {/* Modern Profile Card */}
@@ -286,7 +312,7 @@ const Profile = () => {
                     <div className="w-4 h-4 rounded-full bg-white animate-pulse"></div>
                   </div>
                 )}
-                {isEditing && (
+                {!isMentorView && isEditing && (
                   <button
                     onClick={() => setShowAvatarModal(true)}
                     className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
