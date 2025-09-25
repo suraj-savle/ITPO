@@ -16,8 +16,12 @@ export const makeAuthenticatedRequest = async (url, options = {}, navigate) => {
 
   const defaultHeaders = {
     'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
   };
+
+  // Don't set Content-Type for FormData, let browser handle it
+  if (!(options.body instanceof FormData)) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
 
   const requestOptions = {
     ...options,

@@ -236,13 +236,34 @@ const Profile = () => {
     return Math.round((completed / total) * 100);
   };
 
-  const handleResumeChange = (e) => {
+  const handleResumeChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setResume(file);
-      const fileUrl = URL.createObjectURL(file);
-      setResumePreview(fileUrl);
-      setFormData(prev => ({ ...prev, resumeUrl: fileUrl }));
+      
+      // Upload the file immediately
+      const formData = new FormData();
+      formData.append('resume', file);
+      
+      try {
+        const response = await makeAuthenticatedRequest(
+          "http://localhost:5000/api/student/upload-resume",
+          {
+            method: 'POST',
+            body: formData,
+            headers: {} // Let browser set Content-Type for FormData
+          },
+          navigate
+        );
+        
+        const data = await response.json();
+        setResumePreview(data.resumeUrl);
+        setFormData(prev => ({ ...prev, resumeUrl: data.resumeUrl }));
+        toast.success('Resume uploaded successfully!');
+      } catch (error) {
+        console.error('Resume upload error:', error);
+        toast.error('Failed to upload resume');
+      }
     }
   };
 
@@ -670,7 +691,7 @@ const Profile = () => {
                   Resume
                 </h3>
               {isEditing ? (
-                <div className="flex items-center gap-4">
+                <div className="space-y-4">
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx"
@@ -678,15 +699,17 @@ const Profile = () => {
                     className="border-2 border-dashed border-gray-300 rounded-xl p-4 w-full hover:border-indigo-400 transition-colors"
                   />
                   {resumePreview && (
-                    <a
-                      href={resumePreview}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                    >
-                      <FileText size={18} />
-                      View Current Resume
-                    </a>
+                    <div className="flex gap-2">
+                      <a
+                        href={resumePreview}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
+                      >
+                        <FileText size={16} />
+                        View Current Resume
+                      </a>
+                    </div>
                   )}
                 </div>
               ) : (
