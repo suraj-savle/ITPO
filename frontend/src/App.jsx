@@ -22,6 +22,7 @@ import AdminPostSection from "./pages/admin/AdminPostSection";
 import RecruiterJobs from "./pages/recruiter/RecruiterJobs";
 import RecruiterApplications from "./pages/recruiter/RecruiterApplications";
 import RecruiterDashboard from "./pages/recruiter/RecruiterDashboard";
+import UnderDevelopment from "./pages/UnderDevelopment";
 
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/*" element={<UnderDevelopment />} />
         
         <Route path="/student" element={<ProtectedRoute><DashboardLayout userRole="student" /></ProtectedRoute>}>
           <Route index element={<StudentHome />} />
