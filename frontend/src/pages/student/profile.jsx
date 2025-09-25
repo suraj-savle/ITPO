@@ -144,7 +144,15 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, [navigate]);
+    
+    // Auto-refresh profile data every 30 seconds to check for placement updates
+    if (!isMentorView) {
+      const interval = setInterval(() => {
+        fetchProfile().catch(console.error);
+      }, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [navigate, isMentorView]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -628,26 +636,42 @@ const Profile = () => {
                     Placement Status
                   </h3>
                 {formData.isPlaced ? (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle size={20} className="text-green-600" />
-                      <span className="font-semibold text-green-800">
-                        Placed
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-green-500 rounded-full">
+                        <CheckCircle size={16} className="text-white" />
+                      </div>
+                      <span className="font-bold text-green-800 text-lg">
+                        Successfully Placed! 🎉
                       </span>
                     </div>
-                    <div className="space-y-2">
-                      <p className="text-gray-700">
-                        <span className="font-medium">Company:</span>{" "}
-                        {formData.placementDetails.company}
-                      </p>
-                      <p className="text-gray-700">
-                        <span className="font-medium">Role:</span>{" "}
-                        {formData.placementDetails.roleOffered}
-                      </p>
-                      <p className="text-gray-700">
-                        <span className="font-medium">Package:</span>{" "}
-                        {formData.placementDetails.package}
-                      </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="bg-white/60 rounded-lg p-3">
+                        <p className="text-sm text-gray-600 mb-1">Company</p>
+                        <p className="font-semibold text-gray-800">
+                          {formData.placementDetails?.company || 'Not specified'}
+                        </p>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-3">
+                        <p className="text-sm text-gray-600 mb-1">Role</p>
+                        <p className="font-semibold text-gray-800">
+                          {formData.placementDetails?.roleOffered || 'Not specified'}
+                        </p>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-3">
+                        <p className="text-sm text-gray-600 mb-1">Package</p>
+                        <p className="font-semibold text-gray-800">
+                          {formData.placementDetails?.package || 'Not specified'}
+                        </p>
+                      </div>
+                      {formData.placementDetails?.placedAt && (
+                        <div className="bg-white/60 rounded-lg p-3">
+                          <p className="text-sm text-gray-600 mb-1">Placed On</p>
+                          <p className="font-semibold text-gray-800">
+                            {new Date(formData.placementDetails.placedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -658,6 +682,9 @@ const Profile = () => {
                         Seeking Opportunities
                       </span>
                     </div>
+                    <p className="text-sm text-yellow-700 mt-2">
+                      Keep applying to jobs and building your profile!
+                    </p>
                   </div>
                 )}
               </div>
