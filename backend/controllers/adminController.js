@@ -46,7 +46,7 @@ export const createUser = async (req, res) => {
       createdBy: req.user.id
     };
 
-    if (role === "recruiter") userData.companyName = companyName;
+    if (role === "recruiter") userData.company = companyName;
     if (role === "mentor") userData.department = department;
 
     const user = new User(userData);
@@ -178,6 +178,38 @@ export const assignMentorToStudent = async (req, res) => {
       message: "Mentor assigned successfully",
       student: student.getPublicProfile()
     });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    if (user.role === 'admin') {
+      return res.status(403).json({ message: "Cannot delete admin users" });
+    }
+    
+    // Delete related data
+    if (user.role === 'student') {
+      await Application.deleteMany({ student: userId });
+    } else if (user.role === 'mentor') {
+      await Application.deleteMany({ mentor: userId });
+      await User.updateMany({ assignedMentor: userId }, { $unset: { assignedMentor: 1 } });
+    } else if (user.role === 'recruiter') {
+      await Job.deleteMany({ recruiter: userId });
+      await Application.deleteMany({ recruiter: userId });
+    }
+    
+    await User.findByIdAndDelete(userId);
+    
+    res.json({ success: true, message: "User deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: "Server Error", error: err.message });
   }

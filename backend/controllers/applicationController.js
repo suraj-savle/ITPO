@@ -193,10 +193,11 @@ export const recruiterDecision = async (req, res) => {
       // Update student placement status when hired
       if (app.student) {
         const User = (await import('../models/UserModel.js')).default;
+        const recruiter = await User.findById(app.recruiter).select('company name');
         await User.findByIdAndUpdate(app.student._id, {
           isPlaced: true,
           placementDetails: {
-            company: app.job?.company || 'Company Name',
+            company: recruiter?.company || recruiter?.name || 'Company Name',
             roleOffered: app.job?.title || 'Position',
             package: app.job?.stipend || 'Not specified',
             placedAt: new Date()

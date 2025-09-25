@@ -157,7 +157,7 @@ const UserManagement = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {user.role === 'student' && `${user.department} - Year ${user.year}`}
                   {user.role === 'mentor' && user.department}
-                  {user.role === 'recruiter' && user.companyName}
+                  {user.role === 'recruiter' && user.company}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {user.role !== 'admin' && (

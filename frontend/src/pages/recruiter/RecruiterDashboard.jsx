@@ -13,6 +13,7 @@ const RecruiterDashboard = () => {
   });
   const [recentJobs, setRecentJobs] = useState([]);
   const [recentApplications, setRecentApplications] = useState([]);
+  const [recruiterInfo, setRecruiterInfo] = useState({ name: '', company: '' });
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -25,6 +26,12 @@ const RecruiterDashboard = () => {
       }
 
       try {
+        // Fetch recruiter profile
+        const profileRes = await axios.get('http://localhost:5000/api/recruiter/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setRecruiterInfo({ name: profileRes.data.name, company: profileRes.data.company });
+
         const jobsRes = await axios.get('http://localhost:5000/api/jobs/recruiter', {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -78,7 +85,9 @@ const RecruiterDashboard = () => {
     <div className="max-w-7xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">Overview of your recruitment activities</p>
+        <p className="text-sm text-gray-500 mt-1">
+          {recruiterInfo.company ? `${recruiterInfo.company} - ` : ''}Overview of your recruitment activities
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

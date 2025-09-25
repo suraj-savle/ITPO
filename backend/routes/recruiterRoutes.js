@@ -4,6 +4,18 @@ import User from "../models/UserModel.js";
 
 const router = express.Router(); // ✅ Define router
 
+// GET recruiter profile
+router.get("/profile", protect, recruiterOnly, async (req, res) => {
+  try {
+    const recruiter = await User.findById(req.user._id).select('-password');
+    if (!recruiter) return res.status(404).json({ message: "Recruiter not found" });
+    res.json(recruiter);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // GET mentor-approved students with their applications
 router.get("/students", protect, recruiterOnly, async (req, res) => {
   try {

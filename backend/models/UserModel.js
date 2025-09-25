@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
     year: { type: String },
     rollNo: { type: String, unique: true, sparse: true },
     description: { type: String, maxlength: 500, default: "" },
+    company: { type: String, default: "" }, // For recruiters
 
     // ===== ACADEMIC INFO =====
     course: { type: String, default: "" },
