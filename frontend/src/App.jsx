@@ -17,6 +17,7 @@ import MentorHistory from "./pages/mentor/History";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StudentApprovals from "./pages/admin/StudentApprovals";
 import UserManagement from "./pages/admin/UserManagement";
+import ActivityMonitor from "./pages/admin/ActivityMonitor";
 import RecruiterStudentProfile from "./pages/recruiter/RecruiterStudentProfile";
 import StudentsList from "./pages/recruiter/StudentsList";
 import AdminPostSection from "./pages/admin/AdminPostSection";
@@ -69,6 +70,7 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="approvals" element={<StudentApprovals />} />
           <Route path="users" element={<UserManagement />} />
+          <Route path="activities" element={<ActivityMonitor />} />
           <Route path="post" element={<AdminPostSection />} />
         </Route>
 

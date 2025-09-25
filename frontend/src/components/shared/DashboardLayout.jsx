@@ -14,6 +14,7 @@ import {
   Award,
   Megaphone,
   History,
+  Activity,
 } from "lucide-react";
 
 const DashboardLayout = ({ userRole = "student" }) => {
@@ -122,7 +123,8 @@ const DashboardLayout = ({ userRole = "student" }) => {
           icon: CheckCircle,
         },
         { path: "/admin/users", label: "User Management", icon: Users },
-        { path: "/admin/post", label: "Post", icon: Users },
+        { path: "/admin/activities", label: "Activity Monitor", icon: Activity },
+        { path: "/admin/post", label: "Post", icon: Megaphone },
       ],
     },
   };

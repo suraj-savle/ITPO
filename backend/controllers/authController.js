@@ -101,6 +101,11 @@ export const login = async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
+    // Update last login and add activity log
+    user.lastLogin = new Date();
+    user.activityLog.push({ action: 'Logged in', date: new Date() });
+    await user.save();
+
     res.status(200).json({
       success: true,
       token: generateToken(user._id),
@@ -175,6 +180,9 @@ export const updateProfile = async (req, res) => {
     }
 
     try {
+      // Add activity log
+      user.activityLog.push({ action: 'Updated profile', date: new Date() });
+      
       // Save the updated user
       await user.save();
       console.log('User profile updated successfully');

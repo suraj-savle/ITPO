@@ -7,7 +7,9 @@ import {
   rejectStudent, 
   getAllUsers,
   getMentors,
-  assignMentorToStudent 
+  assignMentorToStudent,
+  getUserActivities,
+  getUsersStatus 
 } from "../controllers/adminController.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 import { getAllPosts, createPost, deletePost, getPostHistory } from "../controllers/postController.js";
@@ -59,5 +61,35 @@ router.get("/posts", getAllPosts);
 router.post("/posts", createPost);
 router.delete("/posts/:id", deletePost);
 router.get("/post-history", getPostHistory);
+
+// Activity monitoring routes
+router.get("/activities", getUserActivities);
+router.get("/users-status", getUsersStatus);
+router.post("/seed-activities", async (req, res) => {
+  try {
+    const User = (await import('../models/UserModel.js')).default;
+    const users = await User.find({ role: { $in: ['student', 'mentor', 'recruiter'] } });
+    
+    const activities = [
+      'Updated profile', 'Applied to job', 'Logged in', 'Approved application',
+      'Rejected application', 'Posted new job', 'Scheduled interview', 'Hired candidate'
+    ];
+    
+    for (const user of users) {
+      const numActivities = Math.floor(Math.random() * 5) + 1;
+      for (let i = 0; i < numActivities; i++) {
+        const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+        const randomDate = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
+        user.activityLog.push({ action: randomActivity, date: randomDate });
+      }
+      user.lastLogin = new Date(Date.now() - Math.random() * 3 * 24 * 60 * 60 * 1000);
+      await user.save();
+    }
+    
+    res.json({ message: 'Sample activities seeded successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 export default router;

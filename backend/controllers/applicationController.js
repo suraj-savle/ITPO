@@ -52,6 +52,11 @@ export const applyToJob = async (req, res) => {
       recruiter: job.recruiter
     });
 
+    // Add activity log
+    await User.findByIdAndUpdate(studentId, {
+      $push: { activityLog: { action: `Applied to job: ${job.title}`, date: new Date() } }
+    });
+
     res.status(201).json({ message: "Applied successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -113,7 +118,12 @@ export const mentorDecision = async (req, res) => {
     }
 
     await app.save();
-    // optionally notify student & recruiter
+    
+    // Add activity log for mentor
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: { activityLog: { action: `${action === 'approve' ? 'Approved' : 'Rejected'} application`, date: new Date() } }
+    });
+    
     res.json(app);
   } catch (err) {
     console.error(err);
@@ -209,6 +219,14 @@ export const recruiterDecision = async (req, res) => {
     }
 
     await app.save();
+    
+    // Add activity log for recruiter
+    const actionText = action === 'reject' ? 'Rejected application' : 
+                      action === 'schedule' ? 'Scheduled interview' : 'Hired candidate';
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: { activityLog: { action: actionText, date: new Date() } }
+    });
+    
     res.json(app);
   } catch (err) {
     console.error(err);

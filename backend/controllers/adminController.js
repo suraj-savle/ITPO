@@ -214,3 +214,58 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: err.message });
   }
 };
+
+export const getUserActivities = async (req, res) => {
+  try {
+    const { role, limit = 50 } = req.query;
+    const filter = role ? { role } : { role: { $in: ['student', 'mentor', 'recruiter'] } };
+    
+    const users = await User.find(filter)
+      .select('name email role activityLog lastLogin status')
+      .sort({ 'activityLog.date': -1 })
+      .limit(parseInt(limit));
+    
+    const activities = [];
+    users.forEach(user => {
+      user.activityLog.forEach(activity => {
+        activities.push({
+          userId: user._id,
+          userName: user.name,
+          userEmail: user.email,
+          userRole: user.role,
+          action: activity.action,
+          date: activity.date,
+          status: user.status
+        });
+      });
+    });
+    
+    activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    res.json({ success: true, activities: activities.slice(0, parseInt(limit)) });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
+
+export const getUsersStatus = async (req, res) => {
+  try {
+    const { role } = req.query;
+    const filter = role ? { role } : { role: { $in: ['student', 'mentor', 'recruiter'] } };
+    
+    const users = await User.find(filter)
+      .select('name email role status lastLogin isActive profileCompletion reputationPoints assignedMentor')
+      .populate('assignedMentor', 'name')
+      .sort({ lastLogin: -1 });
+    
+    const statusSummary = {
+      active: users.filter(u => u.status === 'active').length,
+      pending: users.filter(u => u.status === 'pending').length,
+      recentlyActive: users.filter(u => u.lastLogin && new Date() - new Date(u.lastLogin) < 7 * 24 * 60 * 60 * 1000).length
+    };
+    
+    res.json({ success: true, users, statusSummary });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
