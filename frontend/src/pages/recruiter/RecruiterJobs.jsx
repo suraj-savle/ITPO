@@ -86,7 +86,7 @@ export default function RecruiterJobs() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100  mx-auto p-4 space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Job Management</h1>
         <p className="text-sm text-gray-500 mt-1">

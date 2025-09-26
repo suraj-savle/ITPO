@@ -85,7 +85,7 @@ const History = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100  mx-auto p-4">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Application History</h1>
         <p className="text-gray-600">
