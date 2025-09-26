@@ -159,21 +159,33 @@ const Mentees = () => {
               </div>
 
               {/* Placement Details */}
-              {mentee.isPlaced && mentee.placementDetails && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-                  <div className="text-xs font-medium text-green-800 mb-1">
-                    Placement Details
-                  </div>
-                  <div className="text-xs text-green-700">
-                    <div className="truncate">
-                      {mentee.placementDetails.company}
-                    </div>
-                    <div className="truncate">
-                      {mentee.placementDetails.roleOffered}
-                    </div>
-                  </div>
-                </div>
-              )}
+              {mentee.isPlaced && mentee.placementDetails ? (
+  // ✅ Placed
+  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+    <div className="text-xs font-medium text-green-800 mb-1">
+      Placement Details
+    </div>
+    <div className="text-xs text-green-700">
+      <div className="truncate">
+        {mentee.placementDetails.company}
+      </div>
+      <div className="truncate">
+        {mentee.placementDetails.roleOffered}
+      </div>
+    </div>
+  </div>
+) : (
+  // ❌ Not Placed
+  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+    <div className="text-xs font-medium text-red-800 mb-1">
+      Placement Status
+    </div>
+    <div className="text-xs text-red-700">
+      Not Placed
+    </div>
+  </div>
+)}
+
 
               {/* Action */}
               <button
