@@ -161,7 +161,7 @@ const DashboardLayout = ({ userRole = "student" }) => {
 
           {/* User Info */}
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
               {userData?.name?.charAt(0) || "U"}
             </div>
             <span className="hidden sm:block font-medium text-gray-900">
@@ -184,11 +184,11 @@ const DashboardLayout = ({ userRole = "student" }) => {
         {/* SIDEBAR */}
         <aside
           className={`${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            sidebarOpen ? "translate-x-0 translate-y-20 w-full" : "-translate-x-full"
           } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transition-transform duration-300`}
         >
           <div className="px-6 py-4">
-            <h2 className="text-lg font-semibold text-gray-800 mb-6">Menu</h2>
+            <h2 className="text-lg font-semibold text-indigo-800 mb-6">Menu</h2>
             <nav className="flex flex-col gap-2">
               {config.items.map((item) => {
                 const Icon = item.icon;
@@ -202,7 +202,7 @@ const DashboardLayout = ({ userRole = "student" }) => {
                     }}
                     className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${
                       isActive
-                        ? "bg-blue-50 text-blue-600 font-semibold"
+                        ? "bg-indigo-50 text-indigo-600 font-semibold"
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                   >
@@ -220,7 +220,7 @@ const DashboardLayout = ({ userRole = "student" }) => {
         </aside>
 
         {/* CONTENT */}
-        <main className="flex-1 p-6 bg-gray-50">
+        <main className="flex-1 bg-gray-50">
           <Outlet />
         </main>
       </div>

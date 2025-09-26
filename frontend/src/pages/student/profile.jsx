@@ -278,7 +278,7 @@ const Profile = () => {
   if (loading) return <div className="flex items-center justify-center h-64">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100">
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Modern Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
@@ -286,7 +286,7 @@ const Profile = () => {
             {isMentorView && (
               <button
                 onClick={() => navigate('/mentor')}
-                className="mb-4 flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                className="mb-4 flex items-center gap-2 text-indigo-600 hover:text-indigo-800"
               >
                 ← Back to Mentees
               </button>
@@ -315,7 +315,7 @@ const Profile = () => {
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all duration-200 shadow-lg font-medium"
+              className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all duration-200 shadow-lg font-medium"
             >
               <Edit3 size={20} />
               Edit Profile
@@ -324,7 +324,7 @@ const Profile = () => {
         </div>
 
       {/* Modern Profile Card */}
-      <div className="relative bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-3xl shadow-2xl p-8 text-white mb-8 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-600 rounded-3xl shadow-2xl p-8 text-white mb-8 overflow-hidden">
         <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
         <div className="relative z-10">
           <div className="flex flex-col lg:flex-row items-center gap-8">
@@ -334,7 +334,7 @@ const Profile = () => {
                 <img
                   src={formData.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name || 'student'}`}
                   alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-white/40 shadow-2xl transition-transform group-hover:scale-105"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-2xl transition-transform group-hover:scale-105"
                 />
                 {formData.status === "active" && (
                   <div className="absolute -bottom-2 -right-2 bg-green-400 p-2 rounded-full border-3 border-white shadow-lg">

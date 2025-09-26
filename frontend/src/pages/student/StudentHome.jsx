@@ -94,7 +94,7 @@ export default function StudentHome() {
 
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-screen">
         <div className="text-lg text-gray-600">Loading dashboard...</div>
       </div>
     );
@@ -152,7 +152,7 @@ export default function StudentHome() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Recent Applications */}
-        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-400 p-4 sm:p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Briefcase className="h-5 w-5 text-gray-600" />
             Recent Applications
@@ -166,11 +166,16 @@ export default function StudentHome() {
                     <p className="text-sm text-gray-600">{app.company}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {app.status === 'pending' && <Clock className="h-4 w-4 text-orange-500" />}
+                    {app.status === 'pending recruiter review' && <Clock className="h-4 w-4 text-orange-500" />}
                     {app.status === 'accepted' && <CheckCircle className="h-4 w-4 text-green-500" />}
-                    {app.status === 'rejected' && <AlertCircle className="h-4 w-4 text-red-500" />}
+                    {app.status === 'hired' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                    {app.status === 'interview scheduled' && <CheckCircle className="h-4 w-4 text-indigo-500" />}
+                    {app.status === 'rejected by mentor' && <AlertCircle className="h-4 w-4 text-red-500" />}
                     <span className={`text-xs px-2 py-1 rounded-full ${
-                      app.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                      app.status === 'pending recruiter review' ? 'bg-orange-100 text-orange-700' :
+                      app.status === 'hired' ? 'bg-green-100 text-green-700' :
+                      app.status === 'interview scheduled' ? 'bg-indigo-100 text-indigo-700' :
+                      app.status === 'rejected by mentor' ? 'bg-red-100 text-red-700' :
                       app.status === 'accepted' ? 'bg-green-100 text-green-700' :
                       'bg-red-100 text-red-700'
                     }`}>
@@ -186,7 +191,7 @@ export default function StudentHome() {
         </div>
 
         {/* Upcoming Interviews */}
-        <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-400 p-4 sm:p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Calendar className="h-5 w-5 text-gray-600" />
             Upcoming Interviews
@@ -194,16 +199,16 @@ export default function StudentHome() {
           <div className="space-y-3">
             {upcomingInterviews.length > 0 ? (
               upcomingInterviews.map((interview) => (
-                <div key={interview.id} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div key={interview.id} className="p-3 bg-indigo-50 rounded-lg border border-indigo-200">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0">
                     <div>
                       <p className="font-medium text-gray-800">{interview.jobTitle}</p>
                       <p className="text-sm text-gray-600">{interview.company}</p>
-                      <p className="text-xs text-blue-600 mt-1">
+                      <p className="text-xs text-indigo-600 mt-1">
                         {new Date(interview.scheduledAt).toLocaleDateString()} at {new Date(interview.scheduledAt).toLocaleTimeString()}
                       </p>
                     </div>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                    <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
                       {interview.type}
                     </span>
                   </div>

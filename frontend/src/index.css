@@ -28,6 +28,10 @@
   --pmss-accent: #f3f4f6;
 }
 
+input:focus, button:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
 /* Modern Animations */
 @keyframes fadeInUp {
   from {

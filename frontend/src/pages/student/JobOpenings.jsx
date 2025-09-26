@@ -127,9 +127,9 @@ export default function StudentJobs() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        <div className="max-w-6xl mx-auto p-6">
-          <div className="flex items-center justify-center h-64">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-center h-screen">
             <div className="text-gray-500">Loading jobs...</div>
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function StudentJobs() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100">
       <div className="max-w-6xl mx-auto p-4 sm:p-6">
         {/* Header */}
         <div className="mb-8">
