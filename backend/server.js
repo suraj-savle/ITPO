@@ -19,7 +19,10 @@ app.use(express.json());
 
 // ✅ Configure CORS here, not in middleware
 app.use(cors({
-  origin: ["http://localhost:5173", "https://intern-connect-one.vercel.app"],
+  origin: [
+    "http://localhost:5173",
+    "https://internconnect-f3c0norap-swapnils-projects-270a9a02.vercel.app"
+  ],
   credentials: true
 }));
 
