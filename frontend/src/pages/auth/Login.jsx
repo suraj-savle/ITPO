@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
-import { API_URL } from "../../config/api";
+import { loginUser, handleApiError } from "../../services/api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -20,22 +20,14 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.toLowerCase(), password }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-
+      const data = await loginUser({ email: email.toLowerCase(), password });
       localStorage.setItem("token", data.token);
       if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
       
       toast.success("Login successful!");
       setTimeout(() => navigate(`/${data.role}`), 500);
     } catch (err) {
-      toast.error(err.message);
+      toast.error(handleApiError(err));
     } finally {
       setLoading(false);
     }

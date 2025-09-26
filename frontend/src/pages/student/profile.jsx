@@ -111,11 +111,18 @@ const Profile = () => {
           setIsEditing(false);
         }
 
-        const endpoint = isMentor
-          ? `http://localhost:5000/api/mentor/student-profile/${studentId}`
-          : "http://localhost:5000/api/student/profile";
-
-        const res = await makeAuthenticatedRequest(endpoint, {}, navigate);
+        const token = localStorage.getItem('token');
+        const res = await fetch(
+          isMentor
+            ? `${process.env.REACT_APP_API_URL}/api/mentor/student-profile/${studentId}`
+            : `${process.env.REACT_APP_API_URL}/api/student/profile`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
 
         const data = await res.json();
         if (data) {
@@ -172,8 +179,10 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    if (!isTokenValid()) {
-      handleAuthError(navigate);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login again");
+      navigate("/login");
       return;
     }
 
@@ -198,28 +207,45 @@ const Profile = () => {
         resumeUrl: formData.resumeUrl,
       };
 
-      const res = await makeAuthenticatedRequest(
-        "http://localhost:5000/api/student/update-profile",
-        {
-          method: "PUT",
-          body: JSON.stringify(updateData),
+      console.log('Sending update data:', updateData);
+
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/student/update-profile`, {
+        method: "PUT",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        navigate
-      );
+        body: JSON.stringify(updateData),
+      });
 
       const data = await res.json();
+      if (!res.ok) {
+        console.error('Update failed:', data);
+        throw new Error(data.message || "Failed to update profile");
+      }
+
       toast.success("Profile updated successfully!");
       setIsEditing(false);
 
-      if (data.user) {
-        const updatedData = {
-          ...data.user,
-          profileCompletion: calculateProfileCompletion(data.user),
-          reputationPoints: calculateProfileCompletion(data.user),
-          resumeUrl: resumePreview || data.user.resumeUrl,
-        };
-        setFormData(updatedData);
+      // Fetch the updated profile
+      const profileRes = await fetch(`${process.env.REACT_APP_API_URL}/api/student/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!profileRes.ok) {
+        throw new Error("Failed to fetch updated profile");
       }
+
+      const updatedProfile = await profileRes.json();
+      const updatedData = {
+        ...updatedProfile,
+        profileCompletion: calculateProfileCompletion(updatedProfile),
+        reputationPoints: calculateProfileCompletion(updatedProfile),
+        resumeUrl: resumePreview || updatedProfile.resumeUrl,
+      };
+      setFormData(updatedData);
     } catch (err) {
       console.error("Profile update error:", err);
       if (!err.message.includes("Authentication")) {
