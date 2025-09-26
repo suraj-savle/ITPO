@@ -220,7 +220,7 @@ const DashboardLayout = ({ userRole = "student" }) => {
         </aside>
 
         {/* CONTENT */}
-        <main className="flex-1 bg-gray-50">
+        <main className="flex-1 bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100">
           <Outlet />
         </main>
       </div>

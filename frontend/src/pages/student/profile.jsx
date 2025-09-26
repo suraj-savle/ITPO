@@ -29,7 +29,11 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
-import { handleAuthError, makeAuthenticatedRequest, isTokenValid } from "../../utils/auth";
+import {
+  handleAuthError,
+  makeAuthenticatedRequest,
+  isTokenValid,
+} from "../../utils/auth";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -43,14 +47,14 @@ const Profile = () => {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   const avatarOptions = [
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=alex',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=mike',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=emma',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=lisa',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=david',
-    'https://api.dicebear.com/7.x/avataaars/svg?seed=anna'
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=mike",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=emma",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=lisa",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=david",
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=anna",
   ];
 
   // Initialize formData with proper structure
@@ -98,24 +102,20 @@ const Profile = () => {
       }
 
       try {
-          // Check if this is mentor viewing student profile
+        // Check if this is mentor viewing student profile
         const isMentor = studentId !== undefined;
         setIsMentorView(isMentor);
-        
+
         // Disable editing for mentor view
         if (isMentor) {
           setIsEditing(false);
         }
-        
-        const endpoint = isMentor 
+
+        const endpoint = isMentor
           ? `http://localhost:5000/api/mentor/student-profile/${studentId}`
           : "http://localhost:5000/api/student/profile";
-          
-        const res = await makeAuthenticatedRequest(
-          endpoint,
-          {},
-          navigate
-        );
+
+        const res = await makeAuthenticatedRequest(endpoint, {}, navigate);
 
         const data = await res.json();
         if (data) {
@@ -123,9 +123,11 @@ const Profile = () => {
             ...data,
             skills: Array.isArray(data.skills) ? data.skills : [],
             projects: Array.isArray(data.projects) ? data.projects : [],
-            experiences: Array.isArray(data.experiences) ? data.experiences : [],
+            experiences: Array.isArray(data.experiences)
+              ? data.experiences
+              : [],
             profileCompletion: calculateProfileCompletion(data),
-            reputationPoints: calculateProfileCompletion(data)
+            reputationPoints: calculateProfileCompletion(data),
           };
           setFormData((prev) => ({ ...prev, ...updatedData }));
           if (data.resumeUrl) setResumePreview(data.resumeUrl);
@@ -134,7 +136,7 @@ const Profile = () => {
         console.error("Profile fetch error:", err);
         if (err.message.includes("403") || err.message.includes("401")) {
           toast.error("Access denied");
-          navigate('/mentor');
+          navigate("/mentor");
         } else if (!err.message.includes("Authentication")) {
           toast.error("Failed to load profile");
         }
@@ -144,7 +146,7 @@ const Profile = () => {
     };
 
     fetchProfile();
-    
+
     // Auto-refresh profile data every 30 seconds to check for placement updates
     if (!isMentorView) {
       const interval = setInterval(() => {
@@ -186,12 +188,14 @@ const Profile = () => {
         skills: Array.isArray(formData.skills) ? formData.skills : [],
         socialLinks: formData.socialLinks || {},
         projects: Array.isArray(formData.projects) ? formData.projects : [],
-        experiences: Array.isArray(formData.experiences) ? formData.experiences : [],
+        experiences: Array.isArray(formData.experiences)
+          ? formData.experiences
+          : [],
         course: formData.course,
         specialization: formData.specialization,
         backlogs: formData.backlogs,
         profileImage: formData.profileImage,
-        resumeUrl: formData.resumeUrl
+        resumeUrl: formData.resumeUrl,
       };
 
       const res = await makeAuthenticatedRequest(
@@ -206,19 +210,18 @@ const Profile = () => {
       const data = await res.json();
       toast.success("Profile updated successfully!");
       setIsEditing(false);
-      
+
       if (data.user) {
         const updatedData = {
           ...data.user,
           profileCompletion: calculateProfileCompletion(data.user),
           reputationPoints: calculateProfileCompletion(data.user),
-          resumeUrl: resumePreview || data.user.resumeUrl
+          resumeUrl: resumePreview || data.user.resumeUrl,
         };
         setFormData(updatedData);
       }
-      
     } catch (err) {
-      console.error('Profile update error:', err);
+      console.error("Profile update error:", err);
       if (!err.message.includes("Authentication")) {
         toast.error("Failed to update profile. Please try again.");
       }
@@ -227,20 +230,28 @@ const Profile = () => {
 
   const calculateProfileCompletion = (data) => {
     const fields = [
-      data.name, data.email, data.phone, data.department, data.year,
-      data.rollNo, data.cgpa, data.description, data.course, data.specialization
+      data.name,
+      data.email,
+      data.phone,
+      data.department,
+      data.year,
+      data.rollNo,
+      data.cgpa,
+      data.description,
+      data.course,
+      data.specialization,
     ];
     const arrays = [data.skills, data.projects, data.experiences];
     const socialLinks = Object.values(data.socialLinks || {}).filter(Boolean);
-    
+
     const basicFields = fields.filter(Boolean).length;
-    const arrayFields = arrays.filter(arr => arr && arr.length > 0).length;
+    const arrayFields = arrays.filter((arr) => arr && arr.length > 0).length;
     const socialCount = socialLinks.length > 0 ? 1 : 0;
     const resumeCount = data.resumeUrl ? 1 : 0;
-    
+
     const total = 10 + 3 + 1 + 1; // 10 basic + 3 arrays + 1 social + 1 resume
     const completed = basicFields + arrayFields + socialCount + resumeCount;
-    
+
     return Math.round((completed / total) * 100);
   };
 
@@ -248,34 +259,37 @@ const Profile = () => {
     const file = e.target.files[0];
     if (file) {
       setResume(file);
-      
+
       // Upload the file immediately
       const formData = new FormData();
-      formData.append('resume', file);
-      
+      formData.append("resume", file);
+
       try {
         const response = await makeAuthenticatedRequest(
           "http://localhost:5000/api/student/upload-resume",
           {
-            method: 'POST',
+            method: "POST",
             body: formData,
-            headers: {} // Let browser set Content-Type for FormData
+            headers: {}, // Let browser set Content-Type for FormData
           },
           navigate
         );
-        
+
         const data = await response.json();
         setResumePreview(data.resumeUrl);
-        setFormData(prev => ({ ...prev, resumeUrl: data.resumeUrl }));
-        toast.success('Resume uploaded successfully!');
+        setFormData((prev) => ({ ...prev, resumeUrl: data.resumeUrl }));
+        toast.success("Resume uploaded successfully!");
       } catch (error) {
-        console.error('Resume upload error:', error);
-        toast.error('Failed to upload resume');
+        console.error("Resume upload error:", error);
+        toast.error("Failed to upload resume");
       }
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64">Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-64">Loading...</div>
+    );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100">
@@ -285,186 +299,220 @@ const Profile = () => {
           <div>
             {isMentorView && (
               <button
-                onClick={() => navigate('/mentor')}
+                onClick={() => navigate("/mentor")}
                 className="mb-4 flex items-center gap-2 text-indigo-600 hover:text-indigo-800"
               >
                 ← Back to Mentees
               </button>
             )}
             <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              {isMentorView ? 'Student Profile' : 'My Profile'}
+              {isMentorView ? "Student Profile" : "My Profile"}
             </h1>
-            <p className="text-gray-600 mt-1">{isMentorView ? 'View student information and details' : 'Manage your personal information and preferences'}</p>
+            <p className="text-gray-600 mt-1">
+              {isMentorView
+                ? "View student information and details"
+                : "Manage your personal information and preferences"}
+            </p>
           </div>
-          {!isMentorView && (isEditing ? (
-            <div className="flex gap-3">
+          {!isMentorView &&
+            (isEditing ? (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all duration-200 shadow-lg font-medium"
+                >
+                  <Save size={20} />
+                  Save Changes
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={() => setIsEditing(false)}
-                className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium"
+                onClick={() => setIsEditing(true)}
+                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all duration-200 shadow-lg font-medium"
+              >
+                <Edit3 size={20} />
+                Edit Profile
+              </button>
+            ))}
+        </div>
+
+        {/* Modern Profile Card */}
+        <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-600 rounded-3xl shadow-2xl p-8 text-white mb-8 overflow-hidden">
+          <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row items-center gap-8">
+              {/* Avatar Section */}
+              <div className="relative group">
+                <div className="relative">
+                  <img
+                    src={
+                      formData.profileImage ||
+                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${
+                        formData.name || "student"
+                      }`
+                    }
+                    alt="Profile"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-2xl transition-transform group-hover:scale-105"
+                  />
+                  {formData.status === "active" && (
+                    <div className="absolute -bottom-2 -right-2 bg-green-400 p-2 rounded-full border-3 border-white shadow-lg">
+                      <div className="w-4 h-4 rounded-full bg-white animate-pulse"></div>
+                    </div>
+                  )}
+                  {!isMentorView && isEditing && (
+                    <button
+                      onClick={() => setShowAvatarModal(true)}
+                      className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Edit3 size={24} className="text-white" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Profile Info */}
+              <div className="flex-1 text-center lg:text-left space-y-4">
+                <div>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="text-3xl font-bold bg-transparent border-b-2 border-white/40 focus:border-white focus:outline-none text-center lg:text-left w-full"
+                    />
+                  ) : (
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-indigo-100 bg-clip-text text-transparent">
+                      {formData.name}
+                    </h1>
+                  )}
+                  <div className="flex items-center justify-center lg:justify-start gap-2 mt-2">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
+                      <span className="text-sm font-medium">
+                        {formData.course}
+                      </span>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
+                      <span className="text-sm font-medium">
+                        {formData.department}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  {isEditing ? (
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      className="w-full bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl p-3 focus:border-white/60 focus:outline-none resize-none text-white placeholder-white/70"
+                      rows="2"
+                      placeholder="Tell us about yourself..."
+                    />
+                  ) : (
+                    <p className="text-white/90 text-lg leading-relaxed max-w-2xl">
+                      {formData.description || "No description added yet."}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats Section */}
+              <div className="flex lg:flex-col gap-6 lg:gap-4">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Star
+                      size={24}
+                      className="fill-yellow-300 text-yellow-300"
+                    />
+                    <span className="text-2xl font-bold">
+                      {formData.reputationPoints}
+                    </span>
+                  </div>
+                  <p className="text-white/80 text-sm font-medium">
+                    Reputation
+                  </p>
+                </div>
+
+                <div className="text-center">
+                  <div className="text-2xl font-bold mb-2">
+                    {formData.profileCompletion}%
+                  </div>
+                  <p className="text-white/80 text-sm font-medium">Complete</p>
+                  <div className="w-16 bg-white/20 rounded-full h-2 mt-2">
+                    <div
+                      className="bg-gradient-to-r from-green-400 to- -400 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${formData.profileCompletion}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Avatar Selection Modal */}
+        {showAvatarModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                Choose Avatar
+              </h3>
+              <div className="grid grid-cols-4 gap-3 mb-4">
+                {avatarOptions.map((avatar, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        profileImage: avatar,
+                      }));
+                      setShowAvatarModal(false);
+                    }}
+                    className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 hover:border-indigo-500 transition-colors"
+                  >
+                    <img
+                      src={avatar}
+                      alt={`Avatar ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setShowAvatarModal(false)}
+                className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 Cancel
               </button>
-              <button
-                onClick={handleSave}
-                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all duration-200 shadow-lg font-medium"
-              >
-                <Save size={20} />
-                Save Changes
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all duration-200 shadow-lg font-medium"
-            >
-              <Edit3 size={20} />
-              Edit Profile
-            </button>
-          ))}
-        </div>
-
-      {/* Modern Profile Card */}
-      <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-600 rounded-3xl shadow-2xl p-8 text-white mb-8 overflow-hidden">
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
-        <div className="relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-8">
-            {/* Avatar Section */}
-            <div className="relative group">
-              <div className="relative">
-                <img
-                  src={formData.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name || 'student'}`}
-                  alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-2xl transition-transform group-hover:scale-105"
-                />
-                {formData.status === "active" && (
-                  <div className="absolute -bottom-2 -right-2 bg-green-400 p-2 rounded-full border-3 border-white shadow-lg">
-                    <div className="w-4 h-4 rounded-full bg-white animate-pulse"></div>
-                  </div>
-                )}
-                {!isMentorView && isEditing && (
-                  <button
-                    onClick={() => setShowAvatarModal(true)}
-                    className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Edit3 size={24} className="text-white" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Profile Info */}
-            <div className="flex-1 text-center lg:text-left space-y-4">
-              <div>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="text-3xl font-bold bg-transparent border-b-2 border-white/40 focus:border-white focus:outline-none text-center lg:text-left w-full"
-                  />
-                ) : (
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                    {formData.name}
-                  </h1>
-                )}
-                <div className="flex items-center justify-center lg:justify-start gap-2 mt-2">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
-                    <span className="text-sm font-medium">{formData.course}</span>
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
-                    <span className="text-sm font-medium">{formData.department}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                {isEditing ? (
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    className="w-full bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl p-3 focus:border-white/60 focus:outline-none resize-none text-white placeholder-white/70"
-                    rows="2"
-                    placeholder="Tell us about yourself..."
-                  />
-                ) : (
-                  <p className="text-white/90 text-lg leading-relaxed max-w-2xl">
-                    {formData.description || "No description added yet."}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Stats Section */}
-            <div className="flex lg:flex-col gap-6 lg:gap-4">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Star size={24} className="fill-yellow-300 text-yellow-300" />
-                  <span className="text-2xl font-bold">{formData.reputationPoints}</span>
-                </div>
-                <p className="text-white/80 text-sm font-medium">Reputation</p>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-2xl font-bold mb-2">{formData.profileCompletion}%</div>
-                <p className="text-white/80 text-sm font-medium">Complete</p>
-                <div className="w-16 bg-white/20 rounded-full h-2 mt-2">
-                  <div 
-                    className="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${formData.profileCompletion}%` }}
-                  ></div>
-                </div>
-              </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Avatar Selection Modal */}
-      {showAvatarModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Choose Avatar</h3>
-            <div className="grid grid-cols-4 gap-3 mb-4">
-              {avatarOptions.map((avatar, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setFormData(prev => ({ ...prev, profileImage: avatar }));
-                    setShowAvatarModal(false);
-                  }}
-                  className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 hover:border-blue-500 transition-colors"
-                >
-                  <img src={avatar} alt={`Avatar ${index + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setShowAvatarModal(false)}
-              className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+        )}
 
         {/* Modern Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20 hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+              <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl">
                 <TrendingUp size={24} className="text-white" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-600 bg-clip-text text-transparent">
                 {formData.profileCompletion}%
               </span>
             </div>
-            <h3 className="font-semibold text-gray-800 mb-2">Profile Completion</h3>
+            <h3 className="font-semibold text-gray-800 mb-2">
+              Profile Completion
+            </h3>
             <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
               <div
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-700 ease-out"
+                className="bg-gradient-to-r from-indigo-500 to-indigo-600 h-3 rounded-full transition-all duration-700 ease-out"
                 style={{ width: `${formData.profileCompletion}%` }}
               ></div>
             </div>
@@ -514,12 +562,42 @@ const Profile = () => {
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-2 border border-white/20 mb-8">
           <div className="flex flex-wrap gap-2">
             {[
-              { id: "overview", label: "Overview", icon: UserCheck, color: "from-blue-500 to-indigo-600" },
-              { id: "academic", label: "Academic", icon: GraduationCap, color: "from-green-500 to-emerald-600" },
-              { id: "skills", label: "Skills", icon: Award, color: "from-yellow-500 to-orange-600" },
-              { id: "projects", label: "Projects", icon: Briefcase, color: "from-purple-500 to-pink-600" },
-              { id: "experience", label: "Experience", icon: Building, color: "from-red-500 to-rose-600" },
-              { id: "social", label: "Social", icon: Link, color: "from-cyan-500 to-blue-600" },
+              {
+                id: "overview",
+                label: "Overview",
+                icon: UserCheck,
+                color: "from-indigo-500 to-indigo-600",
+              },
+              {
+                id: "academic",
+                label: "Academic",
+                icon: GraduationCap,
+                color: "from-green-500 to-emerald-600",
+              },
+              {
+                id: "skills",
+                label: "Skills",
+                icon: Award,
+                color: "from-yellow-500 to-orange-600",
+              },
+              {
+                id: "projects",
+                label: "Projects",
+                icon: Briefcase,
+                color: "from-purple-500 to-pink-600",
+              },
+              {
+                id: "experience",
+                label: "Experience",
+                icon: Building,
+                color: "from-red-500 to-rose-600",
+              },
+              {
+                id: "social",
+                label: "Social",
+                icon: Link,
+                color: "from-cyan-500 to-indigo-600",
+              },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -543,90 +621,92 @@ const Profile = () => {
           {activeTab === "overview" && (
             <div className="space-y-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-gradient-to-br from-white/50 to-blue-50/50 rounded-2xl p-6 border border-white/30">
+                <div className="bg-gradient-to-br from-white/50 to-indigo-50/50 rounded-2xl p-6 border border-white/30">
                   <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                    <div className="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg">
                       <UserCheck size={20} className="text-white" />
                     </div>
                     Personal Information
                   </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Mail size={18} className="text-gray-500" />
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none flex-1"
-                      />
-                    ) : (
-                      <span className="text-gray-700">{formData.email}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Phone size={18} className="text-gray-500" />
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none flex-1"
-                      />
-                    ) : (
-                      <span className="text-gray-700">{formData.phone}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <BookOpen size={18} className="text-gray-500" />
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="department"
-                        value={formData.department}
-                        onChange={handleInputChange}
-                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none flex-1"
-                      />
-                    ) : (
-                      <span className="text-gray-700">{formData.department}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Calendar size={18} className="text-gray-500" />
-                    {isEditing ? (
-                      <select
-                        name="year"
-                        value={formData.year}
-                        onChange={handleInputChange}
-                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none flex-1 bg-transparent"
-                      >
-                        <option value="1st Year">1st Year</option>
-                        <option value="2nd Year">2nd Year</option>
-                        <option value="3rd Year">3rd Year</option>
-                        <option value="4th Year">4th Year</option>
-                      </select>
-                    ) : (
-                      <span className="text-gray-700">{formData.year}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <GraduationCap size={18} className="text-gray-500" />
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="rollNo"
-                        value={formData.rollNo}
-                        onChange={handleInputChange}
-                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none flex-1"
-                      />
-                    ) : (
-                      <span className="text-gray-700">{formData.rollNo}</span>
-                    )}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Mail size={18} className="text-gray-500" />
+                      {isEditing ? (
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1"
+                        />
+                      ) : (
+                        <span className="text-gray-700">{formData.email}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Phone size={18} className="text-gray-500" />
+                      {isEditing ? (
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1"
+                        />
+                      ) : (
+                        <span className="text-gray-700">{formData.phone}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <BookOpen size={18} className="text-gray-500" />
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="department"
+                          value={formData.department}
+                          onChange={handleInputChange}
+                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1"
+                        />
+                      ) : (
+                        <span className="text-gray-700">
+                          {formData.department}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Calendar size={18} className="text-gray-500" />
+                      {isEditing ? (
+                        <select
+                          name="year"
+                          value={formData.year}
+                          onChange={handleInputChange}
+                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1 bg-transparent"
+                        >
+                          <option value="1st Year">1st Year</option>
+                          <option value="2nd Year">2nd Year</option>
+                          <option value="3rd Year">3rd Year</option>
+                          <option value="4th Year">4th Year</option>
+                        </select>
+                      ) : (
+                        <span className="text-gray-700">{formData.year}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <GraduationCap size={18} className="text-gray-500" />
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="rollNo"
+                          value={formData.rollNo}
+                          onChange={handleInputChange}
+                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1"
+                        />
+                      ) : (
+                        <span className="text-gray-700">{formData.rollNo}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
                 <div className="bg-gradient-to-br from-white/50 to-green-50/50 rounded-2xl p-6 border border-white/30">
                   <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
@@ -635,60 +715,67 @@ const Profile = () => {
                     </div>
                     Placement Status
                   </h3>
-                {formData.isPlaced ? (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-green-500 rounded-full">
-                        <CheckCircle size={16} className="text-white" />
+                  {formData.isPlaced ? (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-green-500 rounded-full">
+                          <CheckCircle size={16} className="text-white" />
+                        </div>
+                        <span className="font-bold text-green-800 text-lg">
+                          Successfully Placed! 🎉
+                        </span>
                       </div>
-                      <span className="font-bold text-green-800 text-lg">
-                        Successfully Placed! 🎉
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="bg-white/60 rounded-lg p-3">
-                        <p className="text-sm text-gray-600 mb-1">Company</p>
-                        <p className="font-semibold text-gray-800">
-                          {formData.placementDetails?.company || 'Not specified'}
-                        </p>
-                      </div>
-                      <div className="bg-white/60 rounded-lg p-3">
-                        <p className="text-sm text-gray-600 mb-1">Role</p>
-                        <p className="font-semibold text-gray-800">
-                          {formData.placementDetails?.roleOffered || 'Not specified'}
-                        </p>
-                      </div>
-                      <div className="bg-white/60 rounded-lg p-3">
-                        <p className="text-sm text-gray-600 mb-1">Package</p>
-                        <p className="font-semibold text-gray-800">
-                          {formData.placementDetails?.package || 'Not specified'}
-                        </p>
-                      </div>
-                      {formData.placementDetails?.placedAt && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div className="bg-white/60 rounded-lg p-3">
-                          <p className="text-sm text-gray-600 mb-1">Placed On</p>
+                          <p className="text-sm text-gray-600 mb-1">Company</p>
                           <p className="font-semibold text-gray-800">
-                            {new Date(formData.placementDetails.placedAt).toLocaleDateString()}
+                            {formData.placementDetails?.company ||
+                              "Not specified"}
                           </p>
                         </div>
-                      )}
+                        <div className="bg-white/60 rounded-lg p-3">
+                          <p className="text-sm text-gray-600 mb-1">Role</p>
+                          <p className="font-semibold text-gray-800">
+                            {formData.placementDetails?.roleOffered ||
+                              "Not specified"}
+                          </p>
+                        </div>
+                        <div className="bg-white/60 rounded-lg p-3">
+                          <p className="text-sm text-gray-600 mb-1">Package</p>
+                          <p className="font-semibold text-gray-800">
+                            {formData.placementDetails?.package ||
+                              "Not specified"}
+                          </p>
+                        </div>
+                        {formData.placementDetails?.placedAt && (
+                          <div className="bg-white/60 rounded-lg p-3">
+                            <p className="text-sm text-gray-600 mb-1">
+                              Placed On
+                            </p>
+                            <p className="font-semibold text-gray-800">
+                              {new Date(
+                                formData.placementDetails.placedAt
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                    <div className="flex items-center gap-3">
-                      <Clock size={20} className="text-yellow-600" />
-                      <span className="font-semibold text-yellow-800">
-                        Seeking Opportunities
-                      </span>
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                      <div className="flex items-center gap-3">
+                        <Clock size={20} className="text-yellow-600" />
+                        <span className="font-semibold text-yellow-800">
+                          Seeking Opportunities
+                        </span>
+                      </div>
+                      <p className="text-sm text-yellow-700 mt-2">
+                        Keep applying to jobs and building your profile!
+                      </p>
                     </div>
-                    <p className="text-sm text-yellow-700 mt-2">
-                      Keep applying to jobs and building your profile!
-                    </p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
 
               <div className="bg-gradient-to-br from-white/50 to-purple-50/50 rounded-2xl p-6 border border-white/30">
                 <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
@@ -717,512 +804,590 @@ const Profile = () => {
                   </div>
                   Resume
                 </h3>
-              {isEditing ? (
-                <div className="space-y-4">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleResumeChange}
-                    className="border-2 border-dashed border-gray-300 rounded-xl p-4 w-full hover:border-indigo-400 transition-colors"
-                  />
-                  {resumePreview && (
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleResumeChange}
+                      className="border-2 border-dashed border-gray-300 rounded-xl p-4 w-full hover:border-indigo-400 transition-colors"
+                    />
+                    {resumePreview && (
+                      <div className="flex gap-2">
+                        <a
+                          href={resumePreview}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 text-sm"
+                        >
+                          <FileText size={16} />
+                          View Current Resume
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  formData.resumeUrl && (
                     <div className="flex gap-2">
                       <a
-                        href={resumePreview}
+                        href={formData.resumeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
-                      >
-                        <FileText size={16} />
-                        View Current Resume
-                      </a>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                formData.resumeUrl && (
-                  <div className="flex gap-2">
-                    <a
-                      href={formData.resumeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
-                    >
-                      <FileText size={18} />
-                      View Resume
-                      <ExternalLink size={14} />
-                    </a>
-                    {isMentorView && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const token = localStorage.getItem('token');
-                            const response = await fetch(`http://localhost:5000/api/mentor/student-resume/${studentId}`, {
-                              headers: { 'Authorization': `Bearer ${token}` }
-                            });
-                            
-                            if (response.ok) {
-                              const blob = await response.blob();
-                              const url = window.URL.createObjectURL(blob);
-                              const link = document.createElement('a');
-                              link.href = url;
-                              link.download = `${formData.name.replace(/\s+/g, '_')}_Resume.pdf`;
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                              window.URL.revokeObjectURL(url);
-                              toast.success('Download initiated');
-                            } else {
-                              toast.error('Failed to download resume');
-                            }
-                          } catch (error) {
-                            console.error('Error downloading resume:', error);
-                            toast.error('Error downloading resume');
-                          }
-                        }}
-                        className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg"
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
                       >
                         <FileText size={18} />
-                        Download Resume
-                      </button>
-                    )}
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-        )}
+                        View Resume
+                        <ExternalLink size={14} />
+                      </a>
+                      {isMentorView && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              const token = localStorage.getItem("token");
+                              const response = await fetch(
+                                `http://localhost:5000/api/mentor/student-resume/${studentId}`,
+                                {
+                                  headers: { Authorization: `Bearer ${token}` },
+                                }
+                              );
 
-        {/* Academic Tab */}
-        {activeTab === "academic" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Academic Details
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                      Course
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="course"
-                        value={formData.course}
-                        onChange={handleInputChange}
-                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none w-full"
-                      />
-                    ) : (
-                      <p className="text-gray-800">{formData.course}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                      Specialization
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="specialization"
-                        value={formData.specialization}
-                        onChange={handleInputChange}
-                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none w-full"
-                      />
-                    ) : (
-                      <p className="text-gray-800">{formData.specialization}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">
-                      Backlogs
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        name="backlogs"
-                        value={formData.backlogs}
-                        onChange={handleInputChange}
-                        min="0"
-                        className="border-b border-gray-300 focus:border-blue-500 focus:outline-none w-20"
-                      />
-                    ) : (
-                      <p className="text-gray-800">{formData.backlogs}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Certifications
-                </h3>
-                <div className="space-y-4">
-                  {formData.certifications.map((cert, index) => (
-                    <div key={index} className="bg-gray-50 p-4 rounded-xl">
-                      <h4 className="font-medium text-gray-800">{cert.name}</h4>
-                      <p className="text-sm text-gray-600">{cert.issuer}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(cert.date).toLocaleDateString()}
-                      </p>
+                              if (response.ok) {
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement("a");
+                                link.href = url;
+                                link.download = `${formData.name.replace(
+                                  /\s+/g,
+                                  "_"
+                                )}_Resume.pdf`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                                toast.success("Download initiated");
+                              } else {
+                                toast.error("Failed to download resume");
+                              }
+                            } catch (error) {
+                              console.error("Error downloading resume:", error);
+                              toast.error("Error downloading resume");
+                            }
+                          }}
+                          className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg"
+                        >
+                          <FileText size={18} />
+                          Download Resume
+                        </button>
+                      )}
                     </div>
-                  ))}
+                  )
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Academic Tab */}
+          {activeTab === "academic" && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    Academic Details
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Course
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="course"
+                          value={formData.course}
+                          onChange={handleInputChange}
+                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none w-full"
+                        />
+                      ) : (
+                        <p className="text-gray-800">{formData.course}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Specialization
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="specialization"
+                          value={formData.specialization}
+                          onChange={handleInputChange}
+                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none w-full"
+                        />
+                      ) : (
+                        <p className="text-gray-800">
+                          {formData.specialization}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Backlogs
+                      </label>
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          name="backlogs"
+                          value={formData.backlogs}
+                          onChange={handleInputChange}
+                          min="0"
+                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none w-20"
+                        />
+                      ) : (
+                        <p className="text-gray-800">{formData.backlogs}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    Certifications
+                  </h3>
+                  <div className="space-y-4">
+                    {formData.certifications.map((cert, index) => (
+                      <div key={index} className="bg-gray-50 p-4 rounded-xl">
+                        <h4 className="font-medium text-gray-800">
+                          {cert.name}
+                        </h4>
+                        <p className="text-sm text-gray-600">{cert.issuer}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(cert.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-        {/* Skills Tab */}
-        {activeTab === "skills" && (
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-6">
-              Skills & Expertise
-            </h3>
-            {isEditing ? (
-              <div>
-                <textarea
-                  value={Array.isArray(formData.skills) ? formData.skills.join(", ") : ""}
-                  onChange={(e) => {
-                    const inputValue = e.target.value;
-                    const skillsArray = inputValue
-                      .split(",")
-                      .map((skill) => skill.trim())
-                      .filter((skill) => skill.length > 0);
-                    setFormData((prev) => ({ ...prev, skills: skillsArray }));
-                  }}
-                  placeholder="Enter skills separated by commas (e.g., JavaScript, React, Node.js, Python)"
-                  className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none bg-white/50 backdrop-blur-sm"
-                  rows="4"
-                />
-                <p className="text-sm text-gray-600 mt-2 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
-                  Separate skills with commas (e.g., JavaScript, React, Node.js)
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-3">
-                {(Array.isArray(formData.skills) ? formData.skills : []).map((skill, index) => (
-                  <span
-                    key={index}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-full font-medium shadow-lg hover:shadow-xl transition-shadow"
-                  >
-                    {skill}
-                  </span>
-                ))}
-                {(!formData.skills || formData.skills.length === 0) && (
-                  <p className="text-gray-500 italic">No skills added yet. Click edit to add your skills.</p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Social Tab */}
-        {activeTab === "social" && (
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-6">
-              Social Profiles
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {Object.entries(formData.socialLinks).map(([platform, url]) => (
-                <div
-                  key={platform}
-                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl"
-                >
-                  {platform === "linkedin" && (
-                    <Linkedin size={20} className="text-blue-700" />
+          {/* Skills Tab */}
+          {activeTab === "skills" && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-6">
+                Skills & Expertise
+              </h3>
+              {isEditing ? (
+                <div>
+                  <textarea
+                    value={
+                      Array.isArray(formData.skills)
+                        ? formData.skills.join(", ")
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const inputValue = e.target.value;
+                      const skillsArray = inputValue
+                        .split(",")
+                        .map((skill) => skill.trim())
+                        .filter((skill) => skill.length > 0);
+                      setFormData((prev) => ({ ...prev, skills: skillsArray }));
+                    }}
+                    placeholder="Enter skills separated by commas (e.g., JavaScript, React, Node.js, Python)"
+                    className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none bg-white/50 backdrop-blur-sm"
+                    rows="4"
+                  />
+                  <p className="text-sm text-gray-600 mt-2 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                    Separate skills with commas (e.g., JavaScript, React,
+                    Node.js)
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-3">
+                  {(Array.isArray(formData.skills) ? formData.skills : []).map(
+                    (skill, index) => (
+                      <span
+                        key={index}
+                        className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-full font-medium shadow-lg hover:shadow-xl transition-shadow"
+                      >
+                        {skill}
+                      </span>
+                    )
                   )}
-                  {platform === "github" && (
-                    <Github size={20} className="text-gray-800" />
-                  )}
-                  {platform === "portfolio" && (
-                    <Globe size={20} className="text-blue-500" />
-                  )}
-                  {platform === "twitter" && (
-                    <Twitter size={20} className="text-blue-400" />
-                  )}
-                  {platform === "leetcode" && (
-                    <Code size={20} className="text-orange-500" />
-                  )}
-                  {platform === "codeforces" && (
-                    <Code size={20} className="text-red-500" />
-                  )}
-                  {platform === "hackerrank" && (
-                    <Code size={20} className="text-green-500" />
-                  )}
-
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800 capitalize mb-1">
-                      {platform}
+                  {(!formData.skills || formData.skills.length === 0) && (
+                    <p className="text-gray-500 italic">
+                      No skills added yet. Click edit to add your skills.
                     </p>
-                    {isEditing ? (
-                      <input
-                        type="url"
-                        value={url}
-                        onChange={(e) =>
-                          handleSocialLinkChange(platform, e.target.value)
-                        }
-                        placeholder={`Enter your ${platform} URL`}
-                        className="w-full p-1.5 border border-gray-300 rounded text-sm focus:border-blue-500 focus:outline-none"
-                      />
-                    ) : (
-                      <p className="text-sm text-gray-600 truncate">{url}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Social Tab */}
+          {activeTab === "social" && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-6">
+                Social Profiles
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {Object.entries(formData.socialLinks).map(([platform, url]) => (
+                  <div
+                    key={platform}
+                    className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl"
+                  >
+                    {platform === "linkedin" && (
+                      <Linkedin size={20} className="text-indigo-700" />
+                    )}
+                    {platform === "github" && (
+                      <Github size={20} className="text-gray-800" />
+                    )}
+                    {platform === "portfolio" && (
+                      <Globe size={20} className="text-indigo-500" />
+                    )}
+                    {platform === "twitter" && (
+                      <Twitter size={20} className="text-indigo-400" />
+                    )}
+                    {platform === "leetcode" && (
+                      <Code size={20} className="text-orange-500" />
+                    )}
+                    {platform === "codeforces" && (
+                      <Code size={20} className="text-red-500" />
+                    )}
+                    {platform === "hackerrank" && (
+                      <Code size={20} className="text-green-500" />
+                    )}
+
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800 capitalize mb-1">
+                        {platform}
+                      </p>
+                      {isEditing ? (
+                        <input
+                          type="url"
+                          value={url}
+                          onChange={(e) =>
+                            handleSocialLinkChange(platform, e.target.value)
+                          }
+                          placeholder={`Enter your ${platform} URL`}
+                          className="w-full p-1.5 border border-gray-300 rounded text-sm focus:border-indigo-500 focus:outline-none"
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-600 truncate">{url}</p>
+                      )}
+                    </div>
+                    {!isEditing && url && (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <ExternalLink size={16} />
+                      </a>
                     )}
                   </div>
-                  {!isEditing && url && (
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <ExternalLink size={16} />
-                    </a>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Projects Tab */}
-        {activeTab === "projects" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">Projects</h3>
-              {isEditing && (
-                <button
-                  onClick={() => {
-                    setFormData(prev => ({
-                      ...prev,
-                      projects: [...(prev.projects || []), {
-                        title: '',
-                        description: '',
-                        technologies: [],
-                        githubLink: '',
-                        liveDemo: ''
-                      }]
-                    }));
-                  }}
-                  className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm"
-                >
-                  Add Project
-                </button>
-              )}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {formData.projects.map((project, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow"
-                >
-                  {isEditing ? (
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={project.title}
-                        onChange={(e) => {
-                          const newProjects = [...formData.projects];
-                          newProjects[index].title = e.target.value;
-                          setFormData(prev => ({ ...prev, projects: newProjects }));
-                        }}
-                        placeholder="Project Title"
-                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
-                      />
-                      <textarea
-                        value={project.description}
-                        onChange={(e) => {
-                          const newProjects = [...formData.projects];
-                          newProjects[index].description = e.target.value;
-                          setFormData(prev => ({ ...prev, projects: newProjects }));
-                        }}
-                        placeholder="Project Description"
-                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
-                        rows="3"
-                      />
-                      <input
-                        type="text"
-                        value={Array.isArray(project.technologies) ? project.technologies.join(', ') : ''}
-                        onChange={(e) => {
-                          const newProjects = [...formData.projects];
-                          const techArray = e.target.value.split(',').map(t => t.trim()).filter(t => t.length > 0);
-                          newProjects[index].technologies = techArray;
-                          setFormData(prev => ({ ...prev, projects: newProjects }));
-                        }}
-                        placeholder="Technologies (comma separated: React, Node.js, MongoDB)"
-                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
-                      />
-                      <input
-                        type="url"
-                        value={project.githubLink}
-                        onChange={(e) => {
-                          const newProjects = [...formData.projects];
-                          newProjects[index].githubLink = e.target.value;
-                          setFormData(prev => ({ ...prev, projects: newProjects }));
-                        }}
-                        placeholder="GitHub Link"
-                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
-                      />
-                      <input
-                        type="url"
-                        value={project.liveDemo}
-                        onChange={(e) => {
-                          const newProjects = [...formData.projects];
-                          newProjects[index].liveDemo = e.target.value;
-                          setFormData(prev => ({ ...prev, projects: newProjects }));
-                        }}
-                        placeholder="Live Demo Link"
-                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
-                      />
-                      <button
-                        onClick={() => {
-                          const newProjects = formData.projects.filter((_, i) => i !== index);
-                          setFormData(prev => ({ ...prev, projects: newProjects }));
-                        }}
-                        className="text-red-600 text-sm hover:text-red-800"
-                      >
-                        Remove Project
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <h4 className="font-semibold text-gray-800 mb-2">
-                        {project.title}
-                      </h4>
-                      <p className="text-gray-600 mb-4">{project.description}</p>
+          {/* Projects Tab */}
+          {activeTab === "projects" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Projects
+                </h3>
+                {isEditing && (
+                  <button
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        projects: [
+                          ...(prev.projects || []),
+                          {
+                            title: "",
+                            description: "",
+                            technologies: [],
+                            githubLink: "",
+                            liveDemo: "",
+                          },
+                        ],
+                      }));
+                    }}
+                    className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm"
+                  >
+                    Add Project
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {formData.projects.map((project, index) => (
+                  <div
+                    key={index}
+                    className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow"
+                  >
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={project.title}
+                          onChange={(e) => {
+                            const newProjects = [...formData.projects];
+                            newProjects[index].title = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              projects: newProjects,
+                            }));
+                          }}
+                          placeholder="Project Title"
+                          className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                        />
+                        <textarea
+                          value={project.description}
+                          onChange={(e) => {
+                            const newProjects = [...formData.projects];
+                            newProjects[index].description = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              projects: newProjects,
+                            }));
+                          }}
+                          placeholder="Project Description"
+                          className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                          rows="3"
+                        />
+                        <input
+                          type="text"
+                          value={
+                            Array.isArray(project.technologies)
+                              ? project.technologies.join(", ")
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const newProjects = [...formData.projects];
+                            const techArray = e.target.value
+                              .split(",")
+                              .map((t) => t.trim())
+                              .filter((t) => t.length > 0);
+                            newProjects[index].technologies = techArray;
+                            setFormData((prev) => ({
+                              ...prev,
+                              projects: newProjects,
+                            }));
+                          }}
+                          placeholder="Technologies (comma separated: React, Node.js, MongoDB)"
+                          className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                        />
+                        <input
+                          type="url"
+                          value={project.githubLink}
+                          onChange={(e) => {
+                            const newProjects = [...formData.projects];
+                            newProjects[index].githubLink = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              projects: newProjects,
+                            }));
+                          }}
+                          placeholder="GitHub Link"
+                          className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                        />
+                        <input
+                          type="url"
+                          value={project.liveDemo}
+                          onChange={(e) => {
+                            const newProjects = [...formData.projects];
+                            newProjects[index].liveDemo = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              projects: newProjects,
+                            }));
+                          }}
+                          placeholder="Live Demo Link"
+                          className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                        />
+                        <button
+                          onClick={() => {
+                            const newProjects = formData.projects.filter(
+                              (_, i) => i !== index
+                            );
+                            setFormData((prev) => ({
+                              ...prev,
+                              projects: newProjects,
+                            }));
+                          }}
+                          className="text-red-600 text-sm hover:text-red-800"
+                        >
+                          Remove Project
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <h4 className="font-semibold text-gray-800 mb-2">
+                          {project.title}
+                        </h4>
+                        <p className="text-gray-600 mb-4">
+                          {project.description}
+                        </p>
 
-                      <div className="mb-4">
-                        <h5 className="text-sm font-medium text-gray-700 mb-2">
-                          Technologies
-                        </h5>
-                        <div className="flex flex-wrap gap-2">
-                          {(Array.isArray(project.technologies) ? project.technologies : []).map((tech, i) => (
-                            <span
-                              key={i}
-                              className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs"
+                        <div className="mb-4">
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">
+                            Technologies
+                          </h5>
+                          <div className="flex flex-wrap gap-2">
+                            {(Array.isArray(project.technologies)
+                              ? project.technologies
+                              : []
+                            ).map((tech, i) => (
+                              <span
+                                key={i}
+                                className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs"
+                              >
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          {project.githubLink && (
+                            <a
+                              href={project.githubLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-sm"
                             >
-                              {tech}
-                            </span>
-                          ))}
+                              <Github size={16} /> Code
+                            </a>
+                          )}
+                          {project.liveDemo && (
+                            <a
+                              href={project.liveDemo}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-sm"
+                            >
+                              <ExternalLink size={16} /> Live Demo
+                            </a>
+                          )}
                         </div>
                       </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-                      <div className="flex gap-3">
-                        {project.githubLink && (
-                          <a
-                            href={project.githubLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            <Github size={16} /> Code
-                          </a>
-                        )}
-                        {project.liveDemo && (
-                          <a
-                            href={project.liveDemo}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
-                          >
-                            <ExternalLink size={16} /> Live Demo
-                          </a>
-                        )}
+          {/* Experience Tab */}
+          {activeTab === "experience" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Work Experience
+                </h3>
+                {isEditing && (
+                  <button
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        experiences: [
+                          ...prev.experiences,
+                          {
+                            role: "",
+                            company: "",
+                            description: "",
+                          },
+                        ],
+                      }));
+                    }}
+                    className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm"
+                  >
+                    Add Experience
+                  </button>
+                )}
+              </div>
+              <div className="space-y-4">
+                {formData.experiences.map((exp, index) => (
+                  <div
+                    key={index}
+                    className="border-l-4 border-indigo-500 pl-4 py-2"
+                  >
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={exp.role}
+                          onChange={(e) => {
+                            const newExperiences = [...formData.experiences];
+                            newExperiences[index].role = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              experiences: newExperiences,
+                            }));
+                          }}
+                          placeholder="Job Role"
+                          className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={exp.company}
+                          onChange={(e) => {
+                            const newExperiences = [...formData.experiences];
+                            newExperiences[index].company = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              experiences: newExperiences,
+                            }));
+                          }}
+                          placeholder="Company Name"
+                          className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                        />
+                        <textarea
+                          value={exp.description}
+                          onChange={(e) => {
+                            const newExperiences = [...formData.experiences];
+                            newExperiences[index].description = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              experiences: newExperiences,
+                            }));
+                          }}
+                          placeholder="Job Description"
+                          className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                          rows="3"
+                        />
+                        <button
+                          onClick={() => {
+                            const newExperiences = formData.experiences.filter(
+                              (_, i) => i !== index
+                            );
+                            setFormData((prev) => ({
+                              ...prev,
+                              experiences: newExperiences,
+                            }));
+                          }}
+                          className="text-red-600 text-sm hover:text-red-800"
+                        >
+                          Remove
+                        </button>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    ) : (
+                      <div>
+                        <h4 className="font-semibold text-gray-800">
+                          {exp.role} • {exp.company}
+                        </h4>
+                        <p className="text-gray-700">{exp.description}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Experience Tab */}
-        {activeTab === "experience" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">Work Experience</h3>
-              {isEditing && (
-                <button
-                  onClick={() => {
-                    setFormData(prev => ({
-                      ...prev,
-                      experiences: [...prev.experiences, {
-                        role: '',
-                        company: '',
-                        description: ''
-                      }]
-                    }));
-                  }}
-                  className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm"
-                >
-                  Add Experience
-                </button>
-              )}
-            </div>
-            <div className="space-y-4">
-              {formData.experiences.map((exp, index) => (
-                <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                  {isEditing ? (
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={exp.role}
-                        onChange={(e) => {
-                          const newExperiences = [...formData.experiences];
-                          newExperiences[index].role = e.target.value;
-                          setFormData(prev => ({ ...prev, experiences: newExperiences }));
-                        }}
-                        placeholder="Job Role"
-                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
-                      />
-                      <input
-                        type="text"
-                        value={exp.company}
-                        onChange={(e) => {
-                          const newExperiences = [...formData.experiences];
-                          newExperiences[index].company = e.target.value;
-                          setFormData(prev => ({ ...prev, experiences: newExperiences }));
-                        }}
-                        placeholder="Company Name"
-                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
-                      />
-                      <textarea
-                        value={exp.description}
-                        onChange={(e) => {
-                          const newExperiences = [...formData.experiences];
-                          newExperiences[index].description = e.target.value;
-                          setFormData(prev => ({ ...prev, experiences: newExperiences }));
-                        }}
-                        placeholder="Job Description"
-                        className="w-full p-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none"
-                        rows="3"
-                      />
-                      <button
-                        onClick={() => {
-                          const newExperiences = formData.experiences.filter((_, i) => i !== index);
-                          setFormData(prev => ({ ...prev, experiences: newExperiences }));
-                        }}
-                        className="text-red-600 text-sm hover:text-red-800"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <h4 className="font-semibold text-gray-800">
-                        {exp.role} • {exp.company}
-                      </h4>
-                      <p className="text-gray-700">{exp.description}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
         </div>
       </div>
     </div>

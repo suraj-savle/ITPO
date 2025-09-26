@@ -57,9 +57,9 @@ export default function Landing() {
     {
       title: "Placement Cell",
       desc: "Career Support & Placement Assistance",
-      color: "from-blue-50 to-blue-100",
-      hoverColor: "hover:from-blue-100 hover:to-blue-200",
-      icon: <Trophy className="w-6 h-6 text-blue-600" />,
+      color: "from-indigo-50 to-indigo-100",
+      hoverColor: "hover:from-indigo-100 hover:to-indigo-200",
+      icon: <Trophy className="w-6 h-6 text-indigo-600" />,
       stats: "87% Success Rate",
     },
     {
@@ -76,59 +76,58 @@ export default function Landing() {
     <div className="min-h-screen flex flex-col overflow-x-hidden">
       {/* Navigation */}
       <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 transition-all duration-300">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex justify-between items-center py-4">
-      {/* Logo + Brand */}
-      <div className="flex items-center space-x-2 group">
-        <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold transform transition-transform duration-300 group-hover:rotate-12">
-          IC
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            {/* Logo + Brand */}
+            <div className="flex items-center space-x-2 group">
+              <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold transform transition-transform duration-300 group-hover:rotate-12">
+                IC
+              </div>
+              <span className="text-xl font-bold text-indigo-700 group-hover:text-purple-600 transition-colors duration-300">
+                InternConnect
+              </span>
+            </div>
+
+            {/* Links (Desktop) */}
+            <div className="hidden md:flex items-center space-x-8 text-sm font-medium">
+              <a
+                href="#features"
+                className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
+              >
+                Features
+              </a>
+              <a
+                href="#how-it-works"
+                className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
+              >
+                How It Works
+              </a>
+              <a
+                href="#contact"
+                className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
+              >
+                Contact
+              </a>
+            </div>
+
+            {/* Auth Buttons */}
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <Link
+                to="/login"
+                className="px-4 py-2 rounded-lg text-sm sm:text-base font-medium border border-gray-300 text-gray-600 hover:text-indigo-600 hover:border-indigo-600 transition-all duration-300 hover:scale-105"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                className="px-4 py-2 rounded-lg text-sm sm:text-base font-medium bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                Register
+              </Link>
+            </div>
+          </div>
         </div>
-        <span className="text-xl font-bold text-indigo-700 group-hover:text-purple-600 transition-colors duration-300">
-          InternConnect
-        </span>
-      </div>
-
-      {/* Links (Desktop) */}
-      <div className="hidden md:flex items-center space-x-8 text-sm font-medium">
-        <a
-          href="#features"
-          className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
-        >
-          Features
-        </a>
-        <a
-          href="#how-it-works"
-          className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
-        >
-          How It Works
-        </a>
-        <a
-          href="#contact"
-          className="text-gray-600 hover:text-indigo-600 transition-colors duration-300"
-        >
-          Contact
-        </a>
-      </div>
-
-      {/* Auth Buttons */}
-      <div className="flex items-center space-x-3 sm:space-x-4">
-        <Link
-          to="/login"
-          className="px-4 py-2 rounded-lg text-sm sm:text-base font-medium border border-gray-300 text-gray-600 hover:text-indigo-600 hover:border-indigo-600 transition-all duration-300 hover:scale-105"
-        >
-          Sign In
-        </Link>
-        <Link
-          to="/register"
-          className="px-4 py-2 rounded-lg text-sm sm:text-base font-medium bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
-        >
-          Register
-        </Link>
-      </div>
-    </div>
-  </div>
-</nav>
-
+      </nav>
 
       {/* Hero Section */}
       <header className="relative min-h-screen bg-white text-black overflow-hidden">
@@ -200,7 +199,7 @@ export default function Landing() {
           <div className="w-full lg:w-1/2 flex justify-center">
             <div className="relative w-full max-w-lg">
               {/* Animated background elements */}
-              <div className="absolute -top-6 -left-6 w-40 h-40 md:w-72 md:h-72 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-full animate-float-slow"></div>
+              <div className="absolute -top-6 -left-6 w-40 h-40 md:w-72 md:h-72 bg-gradient-to-r from-indigo-400/10 to-purple-400/10 rounded-full animate-float-slow"></div>
               <div className="absolute -bottom-6 -right-6 w-40 h-40 md:w-72 md:h-72 bg-gradient-to-l from-green-400/10 to-cyan-400/10 rounded-full animate-float-slow-reverse"></div>
 
               {/* Feature Cards Grid */}
@@ -647,11 +646,11 @@ export default function Landing() {
       {/* How It Works Section */}
       <section
         id="how-it-works"
-        className="py-24 bg-gradient-to-br from-gray-50 via-white to-blue-50 relative overflow-hidden"
+        className="py-24 bg-gradient-to-br from-gray-50 via-white to-indigo-50 relative overflow-hidden"
       >
         {/* Background Elements */}
         <div className="absolute inset-0 bg-grid-pattern opacity-3"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-100 rounded-full blur-3xl opacity-20"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-100 rounded-full blur-3xl opacity-20"></div>
 
         <div className="max-w-7xl mx-auto px-6 relative">
@@ -686,22 +685,22 @@ export default function Landing() {
           {/* Process Steps */}
           <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-8 relative">
             {/* Connecting Line */}
-            <div className="hidden lg:block absolute top-20 left-20 right-20 h-0.5 bg-gradient-to-r from-gray-200 via-blue-200 to-gray-200">
+            <div className="hidden lg:block absolute top-20 left-20 right-20 h-0.5 bg-gradient-to-r from-gray-200 via-indigo-200 to-gray-200">
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 w-full h-full scale-x-0 origin-left animate-connect-line"></div>
             </div>
 
             {/* Step 1 - Profile Creation */}
             <div className="group text-center relative">
               <div className="relative mb-8">
-                <div className="w-16 h-16 bg-white border-4 border-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4 relative z-10 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+                <div className="w-16 h-16 bg-white border-4 border-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4 relative z-10 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
                   <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl flex items-center justify-center text-white font-semibold text-lg shadow-md">
                     1
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 group-hover:shadow-lg group-hover:border-blue-100 transition-all duration-300">
-                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 group-hover:shadow-lg group-hover:border-indigo-100 transition-all duration-300">
+                <div className="w-12 h-12 bg-indigo-50 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <svg
                     className="w-6 h-6 text-indigo-600"
                     fill="none"
@@ -846,7 +845,7 @@ export default function Landing() {
                 through our platform
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <button className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:from-indigo-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl">
                   Get Started Now
                 </button>
                 <button className="px-8 py-3 bg-white text-gray-700 rounded-lg font-medium border border-gray-300 hover:border-gray-400 transition-all duration-300">
@@ -971,8 +970,8 @@ export default function Landing() {
           </div>
 
           <div className="grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-6">
-            <div className="group bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-2xl hover:shadow-lg transition-all duration-300">
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <div className="group bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-2xl hover:shadow-lg transition-all duration-300">
+              <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <svg
                   className="w-6 h-6 text-white"
                   fill="none"

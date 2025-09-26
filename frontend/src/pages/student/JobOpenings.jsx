@@ -3,7 +3,11 @@ import { Search, MapPin, DollarSign, Clock, Briefcase } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { makeAuthenticatedRequest, isTokenValid, handleAuthError } from "../../utils/auth";
+import {
+  makeAuthenticatedRequest,
+  isTokenValid,
+  handleAuthError,
+} from "../../utils/auth";
 
 export default function StudentJobs() {
   const [jobs, setJobs] = useState([]);
@@ -31,19 +35,26 @@ export default function StudentJobs() {
       } catch (appError) {
         // No applications yet
       }
-      
+
       const jobsRes = await makeAuthenticatedRequest(
         "http://localhost:5000/api/jobs",
         {},
         navigate
       );
       const jobsData = await jobsRes.json();
-      
-      const jobsWithStatus = jobsData.map(job => {
-        const application = applications.find(app => app.job && app.job._id === job._id);
+
+      const jobsWithStatus = jobsData.map((job) => {
+        const application = applications.find(
+          (app) => app.job && app.job._id === job._id
+        );
         let canApply = !application;
-        
-        if (application && ['rejected by mentor', 'rejected by recruiter'].includes(application.status)) {
+
+        if (
+          application &&
+          ["rejected by mentor", "rejected by recruiter"].includes(
+            application.status
+          )
+        ) {
           // Check if rejection was within last minute
           if (application.rejectedAt) {
             const oneMinuteAgo = new Date();
@@ -53,15 +64,15 @@ export default function StudentJobs() {
             canApply = true; // Old rejections without timestamp
           }
         }
-        
+
         return {
           ...job,
           applicationStatus: application ? application.status : null,
           canApply,
-          rejectedAt: application?.rejectedAt
+          rejectedAt: application?.rejectedAt,
         };
       });
-      
+
       setJobs(jobsWithStatus);
       setFilteredJobs(jobsWithStatus);
     } catch (error) {
@@ -78,13 +89,14 @@ export default function StudentJobs() {
   }, []);
 
   useEffect(() => {
-    const filtered = jobs.filter(job =>
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.skillsRequired?.some(skill => 
-        skill.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+    const filtered = jobs.filter(
+      (job) =>
+        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.skillsRequired?.some((skill) =>
+          skill.toLowerCase().includes(searchTerm.toLowerCase())
+        )
     );
     setFilteredJobs(filtered);
   }, [searchTerm, jobs]);
@@ -101,22 +113,21 @@ export default function StudentJobs() {
       const response = await makeAuthenticatedRequest(
         `http://localhost:5000/api/applications/${jobId}/apply`,
         {
-          method: 'POST',
-          body: JSON.stringify({})
+          method: "POST",
+          body: JSON.stringify({}),
         },
         navigate
       );
-      
+
       const responseData = await response.json();
-      
+
       toast.success("Applied successfully!");
-      window.dispatchEvent(new CustomEvent('applicationCreated'));
+      window.dispatchEvent(new CustomEvent("applicationCreated"));
       fetchJobs();
-      
     } catch (error) {
       if (!error.message.includes("Authentication")) {
         const errorMsg = error.response?.data?.message || error.message;
-        if (errorMsg.includes('Cannot reapply until')) {
+        if (errorMsg.includes("Cannot reapply until")) {
           toast.error(errorMsg, { duration: 5000 });
         } else {
           toast.error(errorMsg);
@@ -145,7 +156,9 @@ export default function StudentJobs() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
             Job Openings
           </h1>
-          <p className="text-gray-600">Discover exciting internship opportunities</p>
+          <p className="text-gray-600">
+            Discover exciting internship opportunities
+          </p>
         </div>
 
         {/* Search Bar */}
@@ -167,10 +180,12 @@ export default function StudentJobs() {
           <div className="text-center py-16">
             <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              {searchTerm ? 'No jobs found' : 'No jobs available'}
+              {searchTerm ? "No jobs found" : "No jobs available"}
             </h3>
             <p className="text-gray-500">
-              {searchTerm ? 'Try adjusting your search terms' : 'Check back later for new opportunities'}
+              {searchTerm
+                ? "Try adjusting your search terms"
+                : "Check back later for new opportunities"}
             </p>
           </div>
         ) : (
@@ -181,8 +196,12 @@ export default function StudentJobs() {
                 className="bg-white/70 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
                 <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">{job.title}</h3>
-                  <p className="text-gray-600 text-sm line-clamp-3">{job.description}</p>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    {job.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm line-clamp-3">
+                    {job.description}
+                  </p>
                 </div>
 
                 <div className="space-y-2 mb-6">
@@ -220,41 +239,48 @@ export default function StudentJobs() {
                   </div>
                 )}
 
-
-                
                 {job.canApply ? (
                   <button
                     onClick={() => applyJob(job._id)}
                     className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
                   >
-                    {job.applicationStatus && ['rejected by mentor', 'rejected by recruiter'].includes(job.applicationStatus) ? 'Apply Again' : 'Apply Now'}
+                    {job.applicationStatus &&
+                    ["rejected by mentor", "rejected by recruiter"].includes(
+                      job.applicationStatus
+                    )
+                      ? "Apply Again"
+                      : "Apply Now"}
                   </button>
                 ) : (
                   <div className="w-full">
-                    {job.applicationStatus === 'pending mentor approval' ? (
+                    {job.applicationStatus === "pending mentor approval" ? (
                       <div className="bg-yellow-100 text-yellow-700 py-3 rounded-xl font-semibold text-center">
                         Pending Mentor Approval
                       </div>
-                    ) : job.applicationStatus === 'pending recruiter review' ? (
-                      <div className="bg-blue-100 text-blue-700 py-3 rounded-xl font-semibold text-center">
+                    ) : job.applicationStatus === "pending recruiter review" ? (
+                      <div className="bg-indigo-100 text-indigo-700 py-3 rounded-xl font-semibold text-center">
                         Pending Recruiter Review
                       </div>
-                    ) : job.applicationStatus === 'interview scheduled' ? (
+                    ) : job.applicationStatus === "interview scheduled" ? (
                       <div className="bg-green-100 text-green-700 py-3 rounded-xl font-semibold text-center">
                         Interview Scheduled
                       </div>
-                    ) : job.applicationStatus === 'hired' ? (
+                    ) : job.applicationStatus === "hired" ? (
                       <div className="bg-emerald-100 text-emerald-700 py-3 rounded-xl font-semibold text-center">
                         Hired
                       </div>
-                    ) : (job.rejectedAt && new Date(job.rejectedAt) > new Date(Date.now() - 60*1000)) ? (
+                    ) : job.rejectedAt &&
+                      new Date(job.rejectedAt) >
+                        new Date(Date.now() - 60 * 1000) ? (
                       <div className="bg-red-100 text-red-700 py-2 rounded-xl font-semibold text-center text-sm">
                         <div>Can reapply at</div>
                         <div className="font-bold">
-                          {new Date(new Date(job.rejectedAt).getTime() + 60*1000).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit'
+                          {new Date(
+                            new Date(job.rejectedAt).getTime() + 60 * 1000
+                          ).toLocaleTimeString("en-US", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
                           })}
                         </div>
                       </div>

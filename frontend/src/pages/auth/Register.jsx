@@ -16,7 +16,7 @@ export default function Register() {
     rollNo: "",
     cgpa: "",
     skills: "",
-    resume: null
+    resume: null,
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -27,8 +27,9 @@ export default function Register() {
   };
 
   const validateForm = () => {
-    const { name, email, password, phone, department, year, rollNo, cgpa } = formData;
-    
+    const { name, email, password, phone, department, year, rollNo, cgpa } =
+      formData;
+
     if (!name.trim()) {
       toast.error("Full name is required");
       return false;
@@ -37,7 +38,7 @@ export default function Register() {
       toast.error("Name must be at least 2 characters long");
       return false;
     }
-    
+
     if (!email.trim()) {
       toast.error("Email is required");
       return false;
@@ -46,7 +47,7 @@ export default function Register() {
       toast.error("Please enter a valid email address");
       return false;
     }
-    
+
     if (!password.trim()) {
       toast.error("Password is required");
       return false;
@@ -56,10 +57,12 @@ export default function Register() {
       return false;
     }
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      toast.error("Password must contain at least one uppercase letter, one lowercase letter, and one number");
+      toast.error(
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+      );
       return false;
     }
-    
+
     if (!phone.trim()) {
       toast.error("Phone number is required");
       return false;
@@ -68,17 +71,17 @@ export default function Register() {
       toast.error("Please enter a valid phone number");
       return false;
     }
-    
+
     if (!department) {
       toast.error("Department is required");
       return false;
     }
-    
+
     if (!year) {
       toast.error("Year is required");
       return false;
     }
-    
+
     if (!rollNo.trim()) {
       toast.error("Roll number is required");
       return false;
@@ -87,7 +90,7 @@ export default function Register() {
       toast.error("Roll number must be at least 3 characters long");
       return false;
     }
-    
+
     if (!cgpa.trim()) {
       toast.error("CGPA is required");
       return false;
@@ -97,15 +100,15 @@ export default function Register() {
       toast.error("CGPA must be between 0 and 10");
       return false;
     }
-    
+
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setLoading(true);
     const loadingToast = toast.loading("Creating your account...");
 
@@ -117,17 +120,20 @@ export default function Register() {
         phone: formData.phone.trim(),
         rollNo: formData.rollNo.trim().toUpperCase(),
         cgpa: parseFloat(formData.cgpa),
-        skills: formData.skills.split(',').map(s => s.trim()).filter(s => s)
+        skills: formData.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s),
       };
-      
+
       const { data } = await axios.post(
         "http://localhost:5000/api/auth/register-student",
         registrationData,
         {
           timeout: 10000,
           headers: {
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
 
@@ -136,17 +142,19 @@ export default function Register() {
         if (data.token) {
           localStorage.setItem("token", data.token);
         }
-        
+
         // Store user data if provided
         if (data.user) {
           localStorage.setItem("student", JSON.stringify(data.user));
         }
 
         toast.dismiss(loadingToast);
-        
+
         // Show appropriate message based on user status
         if (data.user?.status === "pending") {
-          toast.success("Account created successfully! Please wait for admin approval.");
+          toast.success(
+            "Account created successfully! Please wait for admin approval."
+          );
           setTimeout(() => {
             navigate("/login");
           }, 2000);
@@ -160,29 +168,32 @@ export default function Register() {
         throw new Error(data.message || "Registration failed");
       }
     } catch (err) {
-      console.error('Registration error:', {
+      console.error("Registration error:", {
         message: err.message,
         response: err.response?.data,
-        status: err.response?.status
+        status: err.response?.status,
       });
       toast.dismiss(loadingToast);
-      
+
       let errorMessage = "";
-      
+
       if (err.response) {
         const status = err.response.status;
         const responseData = err.response.data;
-        
+
         if (status === 400) {
-          if (responseData?.field === 'email') {
-            errorMessage = "This email is already registered. Please use a different email address.";
-          } else if (responseData?.field === 'rollNo') {
-            errorMessage = "This roll number is already registered. Please check your roll number.";
+          if (responseData?.field === "email") {
+            errorMessage =
+              "This email is already registered. Please use a different email address.";
+          } else if (responseData?.field === "rollNo") {
+            errorMessage =
+              "This roll number is already registered. Please check your roll number.";
           } else {
             errorMessage = responseData?.message || "Invalid registration data";
           }
         } else if (status === 429) {
-          errorMessage = "Too many registration attempts. Please try again later";
+          errorMessage =
+            "Too many registration attempts. Please try again later";
         } else if (status >= 500) {
           errorMessage = "Server error. Please try again later";
         } else {
@@ -190,19 +201,21 @@ export default function Register() {
         }
       } else if (err.request) {
         // Network error or server not responding
-        errorMessage = "Cannot connect to server. Please check if backend is running and try again";
-        console.error('Network Error:', {
+        errorMessage =
+          "Cannot connect to server. Please check if backend is running and try again";
+        console.error("Network Error:", {
           error: err,
-          request: err.request
+          request: err.request,
         });
-      } else if (err.code === 'ECONNABORTED') {
+      } else if (err.code === "ECONNABORTED") {
         errorMessage = "Request timeout. Please try again";
       } else {
         // Unexpected error
-        errorMessage = err.message || "An unexpected error occurred. Please try again";
-        console.error('Unexpected Error:', err);
+        errorMessage =
+          err.message || "An unexpected error occurred. Please try again";
+        console.error("Unexpected Error:", err);
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -214,9 +227,12 @@ export default function Register() {
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-300/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div
+          className="absolute bottom-20 right-10 w-96 h-96 bg-purple-300/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
-      
+
       <Link
         to="/"
         className="absolute top-4 left-4 sm:top-6 sm:left-6 flex items-center gap-2 text-white/90 hover:text-white transition-colors z-10"
@@ -224,23 +240,28 @@ export default function Register() {
         <ArrowLeft size={20} />
         <span className="hidden sm:inline">Back</span>
       </Link>
-      
+
       <div className="w-full max-w-xl relative z-10">
         <div className="text-center mb-6 sm:mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-pink-400 rounded-lg"></div>
             <span className="text-xl font-bold text-white">InternConnect</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Create Account</h1>
-          <p className="text-white/80 text-lg">Join the future of campus placements</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+            Create Account
+          </h1>
+          <p className="text-white/80 text-lg">
+            Join the future of campus placements
+          </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-indigo-200">
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Full Name</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Full Name
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -253,14 +274,16 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Roll Number</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Roll Number
+                </label>
                 <input
                   type="text"
                   name="rollNo"
                   placeholder="CS2021001"
                   value={formData.rollNo}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
                   required
                 />
               </div>
@@ -274,7 +297,7 @@ export default function Register() {
                 placeholder="john@example.com"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
                 required
               />
             </div>
@@ -287,24 +310,28 @@ export default function Register() {
                 placeholder="+91 9876543210"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Department</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Department
+                </label>
                 <select
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
                   required
                 >
                   <option value="">Select</option>
                   <option value="Computer Science">Computer Science</option>
-                  <option value="Information Technology">Information Technology</option>
+                  <option value="Information Technology">
+                    Information Technology
+                  </option>
                   <option value="Electronics">Electronics</option>
                   <option value="Mechanical">Mechanical</option>
                   <option value="Civil">Civil</option>
@@ -313,12 +340,14 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Year</label>
+                <label className="text-sm font-medium text-gray-700">
+                  Year
+                </label>
                 <select
                   name="year"
                   value={formData.year}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
                   required
                 >
                   <option value="">Select</option>
@@ -330,7 +359,9 @@ export default function Register() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">CGPA</label>
+                <label className="text-sm font-medium text-gray-700">
+                  CGPA
+                </label>
                 <input
                   type="number"
                   step="0.01"
@@ -340,26 +371,30 @@ export default function Register() {
                   placeholder="8.5"
                   value={formData.cgpa}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Skills</label>
+              <label className="text-sm font-medium text-gray-700">
+                Skills
+              </label>
               <input
                 type="text"
                 name="skills"
                 placeholder="JavaScript, React, Python, SQL"
                 value={formData.skills}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Password</label>
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -367,7 +402,7 @@ export default function Register() {
                   placeholder="Create a strong password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 pr-12 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full px-4 py-3 pr-12 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
                   required
                   minLength={8}
                   maxLength={100}
@@ -381,7 +416,8 @@ export default function Register() {
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Password must be at least 8 characters with uppercase, lowercase, and number
+                Password must be at least 8 characters with uppercase,
+                lowercase, and number
               </p>
             </div>
 
@@ -407,26 +443,26 @@ export default function Register() {
           </div>
         </div>
       </div>
-      <Toaster 
+      <Toaster
         position="top-center"
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#363636',
-            color: '#fff',
+            background: "#363636",
+            color: "#fff",
           },
           success: {
             duration: 3000,
             iconTheme: {
-              primary: '#4ade80',
-              secondary: '#fff',
+              primary: "#4ade80",
+              secondary: "#fff",
             },
           },
           error: {
             duration: 5000,
             iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+              primary: "#ef4444",
+              secondary: "#fff",
             },
           },
         }}
