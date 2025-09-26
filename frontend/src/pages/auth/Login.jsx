@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
-import { loginUser, handleApiError } from "../../services/api";
+import { loginUser, handleApiError } from "../../services/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("");

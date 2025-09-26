@@ -6,7 +6,7 @@ import LoginPage from "./pages/auth/Login";
 import DashboardLayout from "./components/shared/DashboardLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import StudentHome from "./pages/student/StudentHome";
-import Profile from "./pages/student/profile";
+import Profile from "./pages/student/Profile";
 import JobOpenings from "./pages/student/JobOpenings";
 import Applications from "./pages/student/Applications";
 import Certificates from "./pages/student/Certificates";
@@ -36,8 +36,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/*" element={<UnderDevelopment />} />
-        <Route path="/*" element={<UnderDevelopment />} />
+        <Route path="*" element={<UnderDevelopment />} />
         
         <Route path="/student" element={<ProtectedRoute><DashboardLayout userRole="student" /></ProtectedRoute>}>
           <Route index element={<StudentHome />} />
