@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import axios from "axios";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
+import { API_URL } from "../../config/api";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -16,7 +17,6 @@ export default function Register() {
     rollNo: "",
     cgpa: "",
     skills: "",
-    resume: null,
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -26,196 +26,46 @@ export default function Register() {
     setFormData({ ...formData, [name]: value });
   };
 
-  const validateForm = () => {
-    const { name, email, password, phone, department, year, rollNo, cgpa } =
-      formData;
-
-    if (!name.trim()) {
-      toast.error("Full name is required");
-      return false;
-    }
-    if (name.trim().length < 2) {
-      toast.error("Name must be at least 2 characters long");
-      return false;
-    }
-
-    if (!email.trim()) {
-      toast.error("Email is required");
-      return false;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error("Please enter a valid email address");
-      return false;
-    }
-
-    if (!password.trim()) {
-      toast.error("Password is required");
-      return false;
-    }
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters long");
-      return false;
-    }
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      toast.error(
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-      );
-      return false;
-    }
-
-    if (!phone.trim()) {
-      toast.error("Phone number is required");
-      return false;
-    }
-    if (!/^[+]?[0-9\s-()]{10,}$/.test(phone)) {
-      toast.error("Please enter a valid phone number");
-      return false;
-    }
-
-    if (!department) {
-      toast.error("Department is required");
-      return false;
-    }
-
-    if (!year) {
-      toast.error("Year is required");
-      return false;
-    }
-
-    if (!rollNo.trim()) {
-      toast.error("Roll number is required");
-      return false;
-    }
-    if (rollNo.trim().length < 3) {
-      toast.error("Roll number must be at least 3 characters long");
-      return false;
-    }
-
-    if (!cgpa.trim()) {
-      toast.error("CGPA is required");
-      return false;
-    }
-    const cgpaValue = parseFloat(cgpa);
-    if (isNaN(cgpaValue) || cgpaValue < 0 || cgpaValue > 10) {
-      toast.error("CGPA must be between 0 and 10");
-      return false;
-    }
-
-    return true;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) return;
+    
+    const requiredFields = ['name', 'email', 'password', 'phone', 'department', 'year', 'rollNo', 'cgpa'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
 
     setLoading(true);
-    const loadingToast = toast.loading("Creating your account...");
-
     try {
       const registrationData = {
         ...formData,
-        name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
-        phone: formData.phone.trim(),
-        rollNo: formData.rollNo.trim().toUpperCase(),
+        email: formData.email.toLowerCase(),
+        rollNo: formData.rollNo.toUpperCase(),
         cgpa: parseFloat(formData.cgpa),
-        skills: formData.skills
-          .split(",")
-          .map((s) => s.trim())
-          .filter((s) => s),
+        skills: formData.skills.split(",").map(s => s.trim()).filter(s => s),
       };
 
       const { data } = await axios.post(
-        "http://localhost:5000/api/auth/register-student",
-        registrationData,
-        {
-          timeout: 10000,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        `${API_URL}/api/auth/register-student`,
+        registrationData
       );
 
       if (data.success) {
-        // Store token if provided
-        if (data.token) {
-          localStorage.setItem("token", data.token);
-        }
+        if (data.token) localStorage.setItem("token", data.token);
+        if (data.user) localStorage.setItem("student", JSON.stringify(data.user));
 
-        // Store user data if provided
-        if (data.user) {
-          localStorage.setItem("student", JSON.stringify(data.user));
-        }
-
-        toast.dismiss(loadingToast);
-
-        // Show appropriate message based on user status
         if (data.user?.status === "pending") {
-          toast.success(
-            "Account created successfully! Please wait for admin approval."
-          );
-          setTimeout(() => {
-            navigate("/login");
-          }, 2000);
+          toast.success("Account created! Please wait for admin approval.");
+          setTimeout(() => navigate("/login"), 2000);
         } else {
-          toast.success("Account created successfully! Welcome to ITPO!");
-          setTimeout(() => {
-            navigate("/student");
-          }, 1000);
+          toast.success("Account created successfully!");
+          setTimeout(() => navigate("/student"), 1000);
         }
-      } else {
-        throw new Error(data.message || "Registration failed");
       }
     } catch (err) {
-      console.error("Registration error:", {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-      });
-      toast.dismiss(loadingToast);
-
-      let errorMessage = "";
-
-      if (err.response) {
-        const status = err.response.status;
-        const responseData = err.response.data;
-
-        if (status === 400) {
-          if (responseData?.field === "email") {
-            errorMessage =
-              "This email is already registered. Please use a different email address.";
-          } else if (responseData?.field === "rollNo") {
-            errorMessage =
-              "This roll number is already registered. Please check your roll number.";
-          } else {
-            errorMessage = responseData?.message || "Invalid registration data";
-          }
-        } else if (status === 429) {
-          errorMessage =
-            "Too many registration attempts. Please try again later";
-        } else if (status >= 500) {
-          errorMessage = "Server error. Please try again later";
-        } else {
-          errorMessage = responseData?.message || "Registration failed";
-        }
-      } else if (err.request) {
-        // Network error or server not responding
-        errorMessage =
-          "Cannot connect to server. Please check if backend is running and try again";
-        console.error("Network Error:", {
-          error: err,
-          request: err.request,
-        });
-      } else if (err.code === "ECONNABORTED") {
-        errorMessage = "Request timeout. Please try again";
-      } else {
-        // Unexpected error
-        errorMessage =
-          err.message || "An unexpected error occurred. Please try again";
-        console.error("Unexpected Error:", err);
-      }
-
+      const errorMessage = err.response?.data?.message || "Registration failed";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -223,115 +73,90 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-600 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute bottom-20 right-10 w-96 h-96 bg-purple-300/10 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
-
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Link
         to="/"
-        className="absolute top-4 left-4 sm:top-6 sm:left-6 flex items-center gap-2 text-white/90 hover:text-white transition-colors z-10"
+        className="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
       >
         <ArrowLeft size={20} />
-        <span className="hidden sm:inline">Back</span>
+        Back
       </Link>
 
-      <div className="w-full max-w-xl relative z-10">
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-pink-400 rounded-lg"></div>
-            <span className="text-xl font-bold text-white">InternConnect</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-            Create Account
-          </h1>
-          <p className="text-white/80 text-lg">
-            Join the future of campus placements
-          </p>
+      <div className="w-full max-w-2xl">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Create account</h1>
+          <p className="text-gray-600">Join the internship placement system</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 border border-indigo-200">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Full Name
-                </label>
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                 <input
                   type="text"
                   name="name"
-                  placeholder="John Doe"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="John Doe"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Roll Number
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Roll Number</label>
                 <input
                   type="text"
                   name="rollNo"
-                  placeholder="CS2021001"
                   value={formData.rollNo}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="CS2021001"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Email</label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 type="email"
                 name="email"
-                placeholder="john@example.com"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="john@example.com"
                 required
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Phone</label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
               <input
                 type="tel"
                 name="phone"
-                placeholder="+91 9876543210"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="+91 9876543210"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Department
-                </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                 <select
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 >
                   <option value="">Select</option>
                   <option value="Computer Science">Computer Science</option>
-                  <option value="Information Technology">
-                    Information Technology
-                  </option>
+                  <option value="Information Technology">Information Technology</option>
                   <option value="Electronics">Electronics</option>
                   <option value="Mechanical">Mechanical</option>
                   <option value="Civil">Civil</option>
@@ -339,15 +164,13 @@ export default function Register() {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Year
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
                 <select
                   name="year"
                   value={formData.year}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 >
                   <option value="">Select</option>
@@ -358,115 +181,76 @@ export default function Register() {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  CGPA
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">CGPA</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   max="10"
                   name="cgpa"
-                  placeholder="8.5"
                   value={formData.cgpa}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="8.5"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Skills
-              </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Skills</label>
               <input
                 type="text"
                 name="skills"
-                placeholder="JavaScript, React, Python, SQL"
                 value={formData.skills}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="JavaScript, React, Python (comma separated)"
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Password
-              </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  placeholder="Create a strong password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 pr-12 bg-gray-50 border-0 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all"
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Create a strong password"
                   required
-                  minLength={8}
-                  maxLength={100}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Password must be at least 8 characters with uppercase,
-                lowercase, and number
-              </p>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 focus:ring-4 focus:ring-indigo-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 shadow-lg"
+              className="w-full bg-gray-900 text-white py-2 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 font-medium"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
+          <div className="mt-6 text-center">
             <p className="text-gray-600">
               Already have an account?{" "}
-              <button
-                onClick={() => navigate("/login")}
-                className="text-indigo-600 font-medium hover:text-indigo-700 transition-colors"
-              >
+              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
                 Sign in
-              </button>
+              </Link>
             </p>
           </div>
         </div>
       </div>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "#363636",
-            color: "#fff",
-          },
-          success: {
-            duration: 3000,
-            iconTheme: {
-              primary: "#4ade80",
-              secondary: "#fff",
-            },
-          },
-          error: {
-            duration: 5000,
-            iconTheme: {
-              primary: "#ef4444",
-              secondary: "#fff",
-            },
-          },
-        }}
-      />
     </div>
   );
 }
