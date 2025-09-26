@@ -18,7 +18,10 @@ const app = express();
 app.use(express.json());
 
 // ✅ Configure CORS here, not in middleware
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({
+  origin: ["http://localhost:5173", "https://intern-connect-one.vercel.app"],
+  credentials: true
+}));
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));
