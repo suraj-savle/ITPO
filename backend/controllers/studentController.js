@@ -76,6 +76,29 @@ export const downloadResume = async (req, res) => {
   }
 };
 
+export const viewResume = async (req, res) => {
+  try {
+    const student = await User.findById(req.user._id).select('resumeUrl');
+    
+    if (!student || !student.resumeUrl) {
+      return res.status(404).json({ message: "Resume not found" });
+    }
+
+    const filename = student.resumeUrl.split('/').pop();
+    const filePath = path.join('uploads/resumes', filename);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "Resume file not found" });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline');
+    res.sendFile(path.resolve(filePath));
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
+
 export const updateStudentProfile = async (req, res) => {
   try {
     const allowedFields = [

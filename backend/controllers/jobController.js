@@ -3,24 +3,22 @@ import User from "../models/UserModel.js";
 import Application from "../models/ApplicationModel.js";
 
 // Create job (recruiter only)
-// ✅ Create Job
 export const createJob = async (req, res) => {
   try {
-    const { title, description, location, skillsRequired, stipend } = req.body;
+    const { title, description, rolesResponsibilities, location, skillsRequired, stipend, submit } = req.body;
 
-    if (!title || !description || !location || !skillsRequired || !stipend) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
+    const jobData = {
+      title: title || "Job Title",
+      description: description || "Job Description",
+      rolesResponsibilities: rolesResponsibilities || "",
+      location: location || "Location TBD",
+      skillsRequired: skillsRequired || [],
+      stipend: stipend || "Not specified",
+      recruiter: req.user._id,
+      status: submit ? "pending_approval" : "draft"
+    };
 
-    const job = await Job.create({
-      title,
-      description,
-      location,
-      skillsRequired,
-      stipend,
-      recruiter: req.user._id, // Assign logged-in recruiter
-    });
-
+    const job = await Job.create(jobData);
     res.status(201).json(job);
   } catch (err) {
     console.error("Create Job Error:", err);
@@ -50,6 +48,39 @@ export const getRecruiterJobs = async (req, res) => {
     res.json(jobs);
   } catch (err) {
     console.error("Get Recruiter Jobs Error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+export const updateJob = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) return res.status(404).json({ message: "Job not found" });
+    
+    // Only creator recruiter can update
+    if (String(job.recruiter) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not authorized to update this job" });
+    }
+
+    // Only allow updates for draft, rejected, or request_changes jobs
+    if (!['draft', 'rejected', 'request_changes'].includes(job.status)) {
+      return res.status(400).json({ message: "Cannot edit job in current status" });
+    }
+
+    const { submit, ...updateData } = req.body;
+    if (submit) {
+      updateData.status = "pending_approval";
+    }
+
+    const updatedJob = await Job.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    res.json(updatedJob);
+  } catch (err) {
+    console.error("Update Job Error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
@@ -84,17 +115,40 @@ export const getJobById = async (req, res) => {
   }
 };
 
-// Deactivate (or delete) job (recruiter)
+// Toggle job active status (recruiter)
 export const toggleJobActive = async (req, res) => {
   try {
+    console.log('Toggle job active - params:', req.params);
+    console.log('Toggle job active - body:', req.body);
+    console.log('Toggle job active - user:', req.user?._id);
+    
     const job = await Job.findById(req.params.id);
+    console.log('Found job:', job ? 'Yes' : 'No');
+    
     if (!job) return res.status(404).json({ message: "Job not found" });
+    
     // Only creator recruiter may toggle (you can also allow admin)
     if (String(job.recruiter) !== String(req.user._id) && req.user.role !== "admin") {
       return res.status(403).json({ message: "Not authorized to modify this job" });
     }
-    job.isActive = !!req.body.isActive;
+    
+    const newStatus = !!req.body.isActive;
+    console.log('Setting job active status to:', newStatus);
+    
+    job.isActive = newStatus;
+    
+    // Add activity log for recruiter
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: { 
+        activityLog: { 
+          action: `${newStatus ? 'Activated' : 'Deactivated'} job: ${job.title}`, 
+          date: new Date() 
+        } 
+      }
+    });
+    
     await job.save();
+    console.log('Job saved successfully');
     res.json(job);
   } catch (err) {
     console.error("Toggle Job Active Error:", err);
@@ -162,11 +216,14 @@ export const applyToJob = async (req, res) => {
 
 
 
-// backend/controllers/jobController.js
+// Get all active jobs for students (only show active and approved jobs)
 export const getAllJobsForStudents = async (req, res) => {
   try {
-    const jobs = await Job.find({ isActive: true })
-      .populate("recruiter", "name email")
+    const jobs = await Job.find({ 
+      isActive: true, 
+      status: 'approved' // Only show approved jobs to students
+    })
+      .populate("recruiter", "name email company")
       .sort({ createdAt: -1 });
     res.status(200).json(jobs);
   } catch (err) {
@@ -198,6 +255,7 @@ export const getMyApplications = async (req, res) => {
           description: job.description,
           location: job.location,
           stipend: job.stipend,
+          isActive: job.isActive, // Include job status for student reference
         },
         status: app.status,
         interviewDate: app.interviewDate,

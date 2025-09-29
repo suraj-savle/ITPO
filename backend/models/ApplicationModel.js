@@ -22,6 +22,15 @@ const applicationSchema = new mongoose.Schema({
   mentorNote: { type: String, default: "" },
   recruiterNote: { type: String, default: "" },
   interviewDate: { type: Date },
+  interviewTime: { type: String }, // Time in HH:MM format
+  interviewMode: { 
+    type: String, 
+    enum: ['online', 'offline', 'phone'], 
+    default: 'online' 
+  },
+  interviewLocation: { type: String }, // For offline interviews
+  interviewMeetingLink: { type: String }, // For online interviews
+  interviewNotes: { type: String }, // Additional interview instructions
   rejectedAt: { type: Date }, // Track when application was rejected
 }, { timestamps: true });
 

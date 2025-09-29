@@ -1,11 +1,26 @@
 import express from "express";
 import { protect, adminOnly, studentOnly } from "../middleware/authMiddleware.js";
-import { getAllPosts, createPost, getPostHistory } from "../controllers/postController.js";
+import { getAllPosts, createPost, getPostHistory, getAnnouncementsForUser } from "../controllers/postController.js";
 
 const router = express.Router();
 
 // Get all posts
 router.get("/", protect, getAllPosts);
+
+// Get announcements for current user
+router.get("/announcements", protect, getAnnouncementsForUser);
+
+// Test endpoint to get all posts
+router.get("/test-all", protect, async (req, res) => {
+  try {
+    const Post = (await import('../models/PostModel.js')).default;
+    const allPosts = await Post.find({});
+    console.log('All posts in database:', allPosts);
+    res.json({ count: allPosts.length, posts: allPosts });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Create a new post (admin only)
 router.post("/", protect, adminOnly, createPost);

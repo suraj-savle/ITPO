@@ -152,14 +152,14 @@ const Profile = () => {
 
     fetchProfile();
 
-    // Auto-refresh profile data every 30 seconds to check for placement updates
-    if (!isMentorView) {
+    // Auto-refresh disabled during editing to prevent data loss
+    if (!isMentorView && !isEditing) {
       const interval = setInterval(() => {
         fetchProfile().catch(console.error);
       }, 30000);
       return () => clearInterval(interval);
     }
-  }, [navigate, studentId]);
+  }, [navigate, studentId, isEditing]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -303,20 +303,20 @@ const Profile = () => {
   console.log('Form data:', formData);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
-        {/* Modern Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto p-6">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
           <div>
             {isMentorView && (
               <button
                 onClick={() => navigate("/mentor")}
-                className="mb-4 flex items-center gap-2 text-indigo-600 hover:text-indigo-800"
+                className="mb-4 flex items-center gap-2 text-indigo-600 hover:text-indigo-700 transition-colors"
               >
                 ← Back to Mentees
               </button>
             )}
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-gray-900">
               {isMentorView ? "Student Profile" : "My Profile"}
             </h1>
             <p className="text-gray-600 mt-1">
@@ -330,139 +330,122 @@ const Profile = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all duration-200 shadow-lg font-medium"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 transition-colors"
                 >
-                  <Save size={20} />
-                  Save Changes
+                  <Save size={18} />
+                  Save
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 flex items-center gap-2 transition-all duration-200 shadow-lg font-medium"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 transition-colors"
               >
-                <Edit3 size={20} />
+                <Edit3 size={18} />
                 Edit Profile
               </button>
             ))}
         </div>
 
-        {/* Modern Profile Card */}
-        <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-600 rounded-3xl shadow-2xl p-8 text-white mb-8 overflow-hidden">
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
-          <div className="relative z-10">
-            <div className="flex flex-col lg:flex-row items-center gap-8">
-              {/* Avatar Section */}
-              <div className="relative group">
-                <div className="relative">
-                  <img
-                    src={
-                      formData.profileImage ||
-                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${
-                        formData.name || "student"
-                      }`
-                    }
-                    alt="Profile"
-                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-2xl transition-transform group-hover:scale-105"
-                  />
-                  {formData.status === "active" && (
-                    <div className="absolute -bottom-2 -right-2 bg-green-400 p-2 rounded-full border-3 border-white shadow-lg">
-                      <div className="w-4 h-4 rounded-full bg-white animate-pulse"></div>
-                    </div>
-                  )}
-                  {!isMentorView && isEditing && (
-                    <button
-                      onClick={() => setShowAvatarModal(true)}
-                      className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Edit3 size={24} className="text-white" />
-                    </button>
-                  )}
-                </div>
+        {/* Profile Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex flex-col lg:flex-row items-center gap-6">
+            {/* Avatar */}
+            <div className="relative group">
+              <img
+                src={
+                  formData.profileImage ||
+                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${
+                    formData.name || "student"
+                  }`
+                }
+                alt="Profile"
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+              />
+              {formData.status === "active" && (
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
+              )}
+              {!isMentorView && isEditing && (
+                <button
+                  onClick={() => setShowAvatarModal(true)}
+                  className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Edit3 size={20} className="text-white" />
+                </button>
+              )}
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1 text-center lg:text-left">
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name || ''}
+                  onChange={handleInputChange}
+                  className="text-2xl font-bold bg-transparent border-b border-gray-300 focus:border-indigo-500 focus:outline-none w-full mb-2"
+                  onKeyDown={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  {formData.name}
+                </h1>
+              )}
+              
+              <div className="flex items-center justify-center lg:justify-start gap-2 mb-3">
+                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                  {formData.course}
+                </span>
+                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                  {formData.department}
+                </span>
               </div>
 
-              {/* Profile Info */}
-              <div className="flex-1 text-center lg:text-left space-y-4">
-                <div>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="text-3xl font-bold bg-transparent border-b-2 border-white/40 focus:border-white focus:outline-none text-center lg:text-left w-full"
-                    />
-                  ) : (
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-indigo-100 bg-clip-text text-transparent">
-                      {formData.name}
-                    </h1>
-                  )}
-                  <div className="flex items-center justify-center lg:justify-start gap-2 mt-2">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
-                      <span className="text-sm font-medium">
-                        {formData.course}
-                      </span>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
-                      <span className="text-sm font-medium">
-                        {formData.department}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {isEditing ? (
+                <textarea
+                  name="description"
+                  value={formData.description || ''}
+                  onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:border-indigo-500 focus:outline-none resize-none"
+                  rows="2"
+                  placeholder="Tell us about yourself..."
+                  onKeyDown={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <p className="text-gray-600 leading-relaxed">
+                  {formData.description || "No description added yet."}
+                </p>
+              )}
+            </div>
 
-                <div>
-                  {isEditing ? (
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl p-3 focus:border-white/60 focus:outline-none resize-none text-white placeholder-white/70"
-                      rows="2"
-                      placeholder="Tell us about yourself..."
-                    />
-                  ) : (
-                    <p className="text-white/90 text-lg leading-relaxed max-w-2xl">
-                      {formData.description || "No description added yet."}
-                    </p>
-                  )}
+            {/* Stats */}
+            <div className="flex gap-8">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <Star size={18} className="fill-yellow-400 text-yellow-400" />
+                  <span className="text-xl font-bold text-gray-900">
+                    {formData.reputationPoints}
+                  </span>
                 </div>
+                <p className="text-gray-600 text-sm">Reputation</p>
               </div>
 
-              {/* Stats Section */}
-              <div className="flex lg:flex-col gap-6 lg:gap-4">
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <Star
-                      size={24}
-                      className="fill-yellow-300 text-yellow-300"
-                    />
-                    <span className="text-2xl font-bold">
-                      {formData.reputationPoints}
-                    </span>
-                  </div>
-                  <p className="text-white/80 text-sm font-medium">
-                    Reputation
-                  </p>
+              <div className="text-center">
+                <div className="text-xl font-bold text-gray-900 mb-1">
+                  {formData.profileCompletion}%
                 </div>
-
-                <div className="text-center">
-                  <div className="text-2xl font-bold mb-2">
-                    {formData.profileCompletion}%
-                  </div>
-                  <p className="text-white/80 text-sm font-medium">Complete</p>
-                  <div className="w-16 bg-white/20 rounded-full h-2 mt-2">
-                    <div
-                      className="bg-gradient-to-r from-green-400 to-green-400 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${formData.profileCompletion}%` }}
-                    ></div>
-                  </div>
+                <p className="text-gray-600 text-sm">Complete</p>
+                <div className="w-16 bg-gray-200 rounded-full h-2 mt-1">
+                  <div
+                    className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${formData.profileCompletion}%` }}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -507,32 +490,30 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Modern Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl">
-                <TrendingUp size={24} className="text-white" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <TrendingUp size={20} className="text-indigo-600" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-gray-900">
                 {formData.profileCompletion}%
               </span>
             </div>
-            <h3 className="font-semibold text-gray-800 mb-2">
-              Profile Completion
-            </h3>
-            <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+            <h3 className="font-medium text-gray-800 mb-1">Profile Completion</h3>
+            <div className="w-full bg-gray-200 h-2 rounded-full">
               <div
-                className="bg-gradient-to-r from-indigo-500 to-indigo-600 h-3 rounded-full transition-all duration-700 ease-out"
+                className="bg-indigo-500 h-2 rounded-full transition-all duration-500"
                 style={{ width: `${formData.profileCompletion}%` }}
               ></div>
             </div>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
-                <GraduationCap size={24} className="text-white" />
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <GraduationCap size={20} className="text-green-600" />
               </div>
               {isEditing ? (
                 <input
@@ -543,35 +524,36 @@ const Profile = () => {
                   step="0.01"
                   min="0"
                   max="10"
-                  className="text-2xl font-bold bg-transparent border-b-2 border-gray-300 focus:border-green-500 focus:outline-none w-20 text-right"
+                  className="text-xl font-bold bg-transparent border-b border-gray-300 focus:border-green-500 focus:outline-none w-16 text-right"
+                  onKeyDown={(e) => e.stopPropagation()}
                 />
               ) : (
-                <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <span className="text-xl font-bold text-gray-900">
                   {formData.cgpa}/10
                 </span>
               )}
             </div>
-            <h3 className="font-semibold text-gray-800">CGPA</h3>
+            <h3 className="font-medium text-gray-800">CGPA</h3>
             <p className="text-gray-600 text-sm">Academic Performance</p>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
-                <Award size={24} className="text-white" />
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Award size={20} className="text-purple-600" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-gray-900">
                 {formData.badges.length}
               </span>
             </div>
-            <h3 className="font-semibold text-gray-800">Badges Earned</h3>
-            <p className="text-gray-600 text-sm">Achievements Unlocked</p>
+            <h3 className="font-medium text-gray-800">Badges Earned</h3>
+            <p className="text-gray-600 text-sm">Achievements</p>
           </div>
         </div>
 
-        {/* Modern Navigation Tabs */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-2 border border-white/20 mb-8">
-          <div className="flex flex-wrap gap-2">
+        {/* Navigation Tabs */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1 mb-6">
+          <div className="flex flex-wrap gap-1">
             {[
               {
                 id: "overview",
@@ -613,10 +595,10 @@ const Profile = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 rounded-xl font-medium flex items-center gap-3 transition-all duration-200 ${
+                className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${
                   activeTab === tab.id
-                    ? `bg-gradient-to-r ${tab.color} text-white shadow-lg transform scale-105`
-                    : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
                 <tab.icon size={20} />
@@ -626,95 +608,115 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Modern Tab Content */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 border border-white/20">
+        {/* Tab Content */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           {/* Overview Tab */}
           {activeTab === "overview" && (
             <div className="space-y-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-gradient-to-br from-white/50 to-indigo-50/50 rounded-2xl p-6 border border-white/30">
-                  <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg">
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-indigo-600 rounded-lg">
                       <UserCheck size={20} className="text-white" />
                     </div>
-                    Personal Information
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Mail size={18} className="text-gray-500" />
-                      {isEditing ? (
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1"
-                        />
-                      ) : (
-                        <span className="text-gray-700">{formData.email}</span>
-                      )}
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Personal Information
+                    </h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                      <Mail size={16} className="text-gray-400" />
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-500 uppercase tracking-wide">Email</label>
+                        {isEditing ? (
+                          <input
+                            type="email"
+                            name="email"
+                            value={formData.email || ''}
+                            onChange={handleInputChange}
+                            className="w-full bg-transparent border-none focus:outline-none text-gray-900 font-medium"
+                            onKeyDown={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <p className="text-gray-900 font-medium">{formData.email}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Phone size={18} className="text-gray-500" />
-                      {isEditing ? (
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1"
-                        />
-                      ) : (
-                        <span className="text-gray-700">{formData.phone}</span>
-                      )}
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                      <Phone size={16} className="text-gray-400" />
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-500 uppercase tracking-wide">Phone</label>
+                        {isEditing ? (
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={formData.phone || ''}
+                            onChange={handleInputChange}
+                            className="w-full bg-transparent border-none focus:outline-none text-gray-900 font-medium"
+                            onKeyDown={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <p className="text-gray-900 font-medium">{formData.phone}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <BookOpen size={18} className="text-gray-500" />
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="department"
-                          value={formData.department}
-                          onChange={handleInputChange}
-                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1"
-                        />
-                      ) : (
-                        <span className="text-gray-700">
-                          {formData.department}
-                        </span>
-                      )}
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                      <BookOpen size={16} className="text-gray-400" />
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-500 uppercase tracking-wide">Department</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            name="department"
+                            value={formData.department || ''}
+                            onChange={handleInputChange}
+                            className="w-full bg-transparent border-none focus:outline-none text-gray-900 font-medium"
+                            onKeyDown={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <p className="text-gray-900 font-medium">{formData.department}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Calendar size={18} className="text-gray-500" />
-                      {isEditing ? (
-                        <select
-                          name="year"
-                          value={formData.year}
-                          onChange={handleInputChange}
-                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1 bg-transparent"
-                        >
-                          <option value="1st Year">1st Year</option>
-                          <option value="2nd Year">2nd Year</option>
-                          <option value="3rd Year">3rd Year</option>
-                          <option value="4th Year">4th Year</option>
-                        </select>
-                      ) : (
-                        <span className="text-gray-700">{formData.year}</span>
-                      )}
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                      <Calendar size={16} className="text-gray-400" />
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-500 uppercase tracking-wide">Year</label>
+                        {isEditing ? (
+                          <select
+                            name="year"
+                            value={formData.year || ''}
+                            onChange={handleInputChange}
+                            className="w-full bg-transparent border-none focus:outline-none text-gray-900 font-medium"
+                            onKeyDown={(e) => e.stopPropagation()}
+                          >
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                          </select>
+                        ) : (
+                          <p className="text-gray-900 font-medium">{formData.year}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <GraduationCap size={18} className="text-gray-500" />
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          name="rollNo"
-                          value={formData.rollNo}
-                          onChange={handleInputChange}
-                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none flex-1"
-                        />
-                      ) : (
-                        <span className="text-gray-700">{formData.rollNo}</span>
-                      )}
+                    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                      <GraduationCap size={16} className="text-gray-400" />
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-500 uppercase tracking-wide">Roll Number</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            name="rollNo"
+                            value={formData.rollNo || ''}
+                            onChange={handleInputChange}
+                            className="w-full bg-transparent border-none focus:outline-none text-gray-900 font-medium"
+                            onKeyDown={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <p className="text-gray-900 font-medium">{formData.rollNo}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -901,13 +903,18 @@ const Profile = () => {
           {activeTab === "academic" && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Academic Details
-                  </h3>
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-green-600 rounded-lg">
+                      <GraduationCap size={20} className="text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Academic Details
+                    </h3>
+                  </div>
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <label className="text-xs text-gray-500 uppercase tracking-wide mb-2 block">
                         Course
                       </label>
                       {isEditing ? (
@@ -916,14 +923,14 @@ const Profile = () => {
                           name="course"
                           value={formData.course}
                           onChange={handleInputChange}
-                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none w-full"
+                          className="w-full bg-transparent border-none focus:outline-none text-gray-900 font-medium"
                         />
                       ) : (
-                        <p className="text-gray-800">{formData.course}</p>
+                        <p className="text-gray-900 font-medium">{formData.course}</p>
                       )}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <label className="text-xs text-gray-500 uppercase tracking-wide mb-2 block">
                         Specialization
                       </label>
                       {isEditing ? (
@@ -932,16 +939,14 @@ const Profile = () => {
                           name="specialization"
                           value={formData.specialization}
                           onChange={handleInputChange}
-                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none w-full"
+                          className="w-full bg-transparent border-none focus:outline-none text-gray-900 font-medium"
                         />
                       ) : (
-                        <p className="text-gray-800">
-                          {formData.specialization}
-                        </p>
+                        <p className="text-gray-900 font-medium">{formData.specialization}</p>
                       )}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                      <label className="text-xs text-gray-500 uppercase tracking-wide mb-2 block">
                         Backlogs
                       </label>
                       {isEditing ? (
@@ -951,31 +956,42 @@ const Profile = () => {
                           value={formData.backlogs}
                           onChange={handleInputChange}
                           min="0"
-                          className="border-b border-gray-300 focus:border-indigo-500 focus:outline-none w-20"
+                          className="w-full bg-transparent border-none focus:outline-none text-gray-900 font-medium"
                         />
                       ) : (
-                        <p className="text-gray-800">{formData.backlogs}</p>
+                        <p className="text-gray-900 font-medium">{formData.backlogs}</p>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    Certifications
-                  </h3>
-                  <div className="space-y-4">
-                    {formData.certifications.map((cert, index) => (
-                      <div key={index} className="bg-gray-50 p-4 rounded-xl">
-                        <h4 className="font-medium text-gray-800">
-                          {cert.name}
-                        </h4>
-                        <p className="text-sm text-gray-600">{cert.issuer}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {new Date(cert.date).toLocaleDateString()}
-                        </p>
+                <div className="bg-gray-50 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-purple-600 rounded-lg">
+                      <Award size={20} className="text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Certifications
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    {formData.certifications.length > 0 ? (
+                      formData.certifications.map((cert, index) => (
+                        <div key={index} className="p-4 bg-white rounded-lg border border-gray-200">
+                          <h4 className="font-medium text-gray-900 mb-1">
+                            {cert.name}
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-1">{cert.issuer}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(cert.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 bg-white rounded-lg border border-gray-200 text-center">
+                        <p className="text-gray-500 text-sm">No certifications added yet</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -992,26 +1008,41 @@ const Profile = () => {
                 <div>
                   <textarea
                     value={
-                      Array.isArray(formData.skills)
+                      formData.skillsInput !== undefined 
+                        ? formData.skillsInput
+                        : Array.isArray(formData.skills)
                         ? formData.skills.join(", ")
                         : ""
                     }
                     onChange={(e) => {
                       const inputValue = e.target.value;
+                      // Store raw input without processing
+                      setFormData((prev) => ({ 
+                        ...prev, 
+                        skillsInput: inputValue
+                      }));
+                    }}
+                    onBlur={(e) => {
+                      // Process skills only on blur
+                      const inputValue = e.target.value;
                       const skillsArray = inputValue
                         .split(",")
                         .map((skill) => skill.trim())
                         .filter((skill) => skill.length > 0);
-                      setFormData((prev) => ({ ...prev, skills: skillsArray }));
+                      setFormData((prev) => ({ 
+                        ...prev, 
+                        skills: skillsArray,
+                        skillsInput: undefined // Clear temp input
+                      }));
                     }}
                     placeholder="Enter skills separated by commas (e.g., JavaScript, React, Node.js, Python)"
-                    className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none bg-white/50 backdrop-blur-sm"
+                    className="w-full p-4 border border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none"
                     rows="4"
+                    onKeyDown={(e) => e.stopPropagation()}
                   />
                   <p className="text-sm text-gray-600 mt-2 flex items-center gap-2">
                     <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
-                    Separate skills with commas (e.g., JavaScript, React,
-                    Node.js)
+                    Separate skills with commas (e.g., JavaScript, React, Node.js)
                   </p>
                 </div>
               ) : (
@@ -1108,12 +1139,20 @@ const Profile = () => {
           {activeTab === "projects" && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Projects
-                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-600 rounded-lg">
+                    <Briefcase size={20} className="text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Projects
+                  </h3>
+                </div>
                 {isEditing && (
                   <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setFormData((prev) => ({
                         ...prev,
                         projects: [
@@ -1128,7 +1167,7 @@ const Profile = () => {
                         ],
                       }));
                     }}
-                    className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm"
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
                   >
                     Add Project
                   </button>
@@ -1155,6 +1194,7 @@ const Profile = () => {
                           }}
                           placeholder="Project Title"
                           className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                          onKeyDown={(e) => e.stopPropagation()}
                         />
                         <textarea
                           value={project.description}
@@ -1169,21 +1209,33 @@ const Profile = () => {
                           placeholder="Project Description"
                           className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
                           rows="3"
+                          onKeyDown={(e) => e.stopPropagation()}
                         />
                         <input
                           type="text"
                           value={
-                            Array.isArray(project.technologies)
+                            project.technologiesInput !== undefined
+                              ? project.technologiesInput
+                              : Array.isArray(project.technologies)
                               ? project.technologies.join(", ")
                               : ""
                           }
                           onChange={(e) => {
+                            const newProjects = [...formData.projects];
+                            newProjects[index].technologiesInput = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              projects: newProjects,
+                            }));
+                          }}
+                          onBlur={(e) => {
                             const newProjects = [...formData.projects];
                             const techArray = e.target.value
                               .split(",")
                               .map((t) => t.trim())
                               .filter((t) => t.length > 0);
                             newProjects[index].technologies = techArray;
+                            delete newProjects[index].technologiesInput;
                             setFormData((prev) => ({
                               ...prev,
                               projects: newProjects,
@@ -1191,6 +1243,7 @@ const Profile = () => {
                           }}
                           placeholder="Technologies (comma separated: React, Node.js, MongoDB)"
                           className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                          onKeyDown={(e) => e.stopPropagation()}
                         />
                         <input
                           type="url"
@@ -1205,6 +1258,7 @@ const Profile = () => {
                           }}
                           placeholder="GitHub Link"
                           className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                          onKeyDown={(e) => e.stopPropagation()}
                         />
                         <input
                           type="url"
@@ -1219,8 +1273,10 @@ const Profile = () => {
                           }}
                           placeholder="Live Demo Link"
                           className="w-full p-2 border border-gray-300 rounded focus:border-indigo-500 focus:outline-none"
+                          onKeyDown={(e) => e.stopPropagation()}
                         />
                         <button
+                          type="button"
                           onClick={() => {
                             const newProjects = formData.projects.filter(
                               (_, i) => i !== index
@@ -1297,12 +1353,20 @@ const Profile = () => {
           {activeTab === "experience" && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Work Experience
-                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-600 rounded-lg">
+                    <Building size={20} className="text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Work Experience
+                  </h3>
+                </div>
                 {isEditing && (
                   <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setFormData((prev) => ({
                         ...prev,
                         experiences: [
@@ -1315,7 +1379,7 @@ const Profile = () => {
                         ],
                       }));
                     }}
-                    className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm"
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
                   >
                     Add Experience
                   </button>
@@ -1372,6 +1436,7 @@ const Profile = () => {
                           rows="3"
                         />
                         <button
+                          type="button"
                           onClick={() => {
                             const newExperiences = formData.experiences.filter(
                               (_, i) => i !== index

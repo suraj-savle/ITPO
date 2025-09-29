@@ -135,26 +135,133 @@ export const getProgressTracking = async (req, res) => {
 
 export const getDashboard = async (req, res) => {
   try {
-    const totalMentees = await User.countDocuments({ 
+    // Get mentor's students
+    const students = await User.find({ 
       role: "student", 
       assignedMentor: req.user._id,
       status: "active"
-    });
+    }).select("-password");
+
+    // Get pending applications from mentor's students
+    const pendingApplications = await Application.find({ 
+      status: "pending mentor approval",
+      student: { $in: students.map(s => s._id) }
+    })
+    .populate('student', 'name email department year rollNo profileImage')
+    .populate('job', 'title company location')
+    .sort({ createdAt: -1 });
+
+    // Get recent applications (last 10)
+    const recentApplications = await Application.find({ 
+      student: { $in: students.map(s => s._id) }
+    })
+    .populate('student', 'name email')
+    .populate('job', 'title company')
+    .sort({ createdAt: -1 })
+    .limit(10);
+
+    // Calculate stats
+    const totalStudents = students.length;
+    const pendingApprovals = pendingApplications.length;
     
-    const placedMentees = await User.countDocuments({ 
-      role: "student", 
-      assignedMentor: req.user._id,
-      isPlaced: true,
-      status: "active"
+    // Count approvals today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const approvedToday = await Application.countDocuments({
+      student: { $in: students.map(s => s._id) },
+      status: "approved by mentor",
+      updatedAt: { $gte: today }
     });
 
+    const completedInternships = students.filter(s => s.isPlaced).length;
+
     res.json({
-      success: true,
-      data: {
-        totalMentees,
-        placedMentees,
-        unplacedMentees: totalMentees - placedMentees
+      pendingApplications,
+      recentApplications,
+      students,
+      notifications: [], // TODO: Implement notifications
+      stats: {
+        totalStudents,
+        pendingApprovals,
+        approvedToday,
+        completedInternships
       }
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
+
+export const approveApplication = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.applicationId)
+      .populate('student', 'assignedMentor');
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // Check if this mentor is assigned to the student
+    if (application.student.assignedMentor.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to approve this application" });
+    }
+
+    application.status = "pending recruiter review";
+    application.mentorApprovedAt = new Date();
+    await application.save();
+
+    res.json({ message: "Application approved successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
+
+export const rejectApplication = async (req, res) => {
+  try {
+    const { feedback } = req.body;
+    const application = await Application.findById(req.params.applicationId)
+      .populate('student', 'assignedMentor');
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // Check if this mentor is assigned to the student
+    if (application.student.assignedMentor.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to reject this application" });
+    }
+
+    application.status = "rejected by mentor";
+    application.mentorFeedback = feedback;
+    application.rejectedAt = new Date();
+    await application.save();
+
+    res.json({ message: "Application rejected successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
+
+export const getStudentProfile = async (req, res) => {
+  try {
+    const student = await User.findOne({
+      _id: req.params.studentId,
+      role: "student",
+      assignedMentor: req.user._id
+    }).select("-password");
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found or not assigned to you" });
+    }
+
+    // Get student's applications
+    const applications = await Application.find({ student: student._id })
+      .populate('job', 'title company location')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      ...student.toObject(),
+      applications
     });
   } catch (err) {
     res.status(500).json({ message: "Server Error", error: err.message });

@@ -1,68 +1,74 @@
 import express from "express";
 import { protect, recruiterOnly } from "../middleware/authMiddleware.js";
-import User from "../models/UserModel.js";    
+import {
+  registerRecruiter,
+  getRecruiterProfile,
+  updateRecruiterProfile,
+  createJobPosting,
+  getRecruiterJobs,
+  updateJobPosting,
+  getJobApplications,
+  updateApplicationStatus,
+  getDashboardStats,
+  getApplicationHistory,
+  generateReport,
+  upload
+} from "../controllers/recruiterController.js";
+import User from "../models/UserModel.js";
+import Application from "../models/ApplicationModel.js";
 
-const router = express.Router(); // ✅ Define router
+const router = express.Router();
 
-// GET recruiter profile
-router.get("/profile", protect, recruiterOnly, async (req, res) => {
+// Public routes
+router.post("/register", upload.fields([
+  { name: 'registrationCertificate', maxCount: 1 },
+  { name: 'mouDocument', maxCount: 1 },
+  { name: 'logo', maxCount: 1 }
+]), registerRecruiter);
+
+// Protected routes
+router.use(protect, recruiterOnly);
+
+// Profile Management
+router.get("/profile", getRecruiterProfile);
+router.put("/profile", updateRecruiterProfile);
+
+// Job Posting Management
+router.post("/jobs", createJobPosting);
+router.get("/jobs", getRecruiterJobs);
+router.put("/jobs/:jobId", updateJobPosting);
+router.get("/jobs/:jobId/applications", getJobApplications);
+
+// Application Management
+router.put("/applications/:applicationId", updateApplicationStatus);
+router.get("/applications/history", getApplicationHistory);
+
+// Dashboard & Analytics
+router.get("/dashboard/stats", getDashboardStats);
+router.get("/reports", generateReport);
+
+// Get approved students for browsing
+router.get("/students", async (req, res) => {
   try {
-    const recruiter = await User.findById(req.user._id).select('-password');
-    if (!recruiter) return res.status(404).json({ message: "Recruiter not found" });
-    res.json(recruiter);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// GET mentor-approved students with their applications
-router.get("/students", protect, recruiterOnly, async (req, res) => {
-  try {
-    const Application = (await import('../models/ApplicationModel.js')).default;
-    
-    // Find applications for this recruiter's jobs that are mentor-approved
-    const applications = await Application.find({
-      recruiter: req.user._id,
-      status: { $in: ['pending recruiter review', 'interview scheduled', 'hired'] }
+    const students = await User.find({
+      role: 'student',
+      isApproved: true,
+      profileCompletion: { $gte: 80 }
     })
-    .populate('student', 'name email phone department year cgpa skills profileImage profileCompletion')
-    .populate('job', 'title description location stipend skillsRequired duration')
-    .sort({ createdAt: -1 });
+    .select('name email phone department year cgpa skills profileImage bio projects experience certifications')
+    .sort({ cgpa: -1, createdAt: -1 });
 
-    // Group applications by student
-    const studentsMap = new Map();
-    applications.forEach(app => {
-      const studentId = app.student._id.toString();
-      if (!studentsMap.has(studentId)) {
-        studentsMap.set(studentId, {
-          ...app.student.toObject(),
-          applications: []
-        });
-      }
-      studentsMap.get(studentId).applications.push({
-        _id: app._id,
-        job: app.job,
-        status: app.status,
-        appliedAt: app.createdAt,
-        interviewDate: app.interviewDate
-      });
-    });
-
-    const studentsWithApplications = Array.from(studentsMap.values());
-    res.json(studentsWithApplications);
+    res.json(students);
   } catch (err) {
-    console.error('Get approved students error:', err);
+    console.error('Get students error:', err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-// GET single student by ID
-router.get("/student/:id", protect, recruiterOnly, async (req, res) => {
+router.get("/student/:id", async (req, res) => {
   try {
     const student = await User.findById(req.params.id);
     if (!student) return res.status(404).json({ message: "Student not found" });
-
     res.json(student);
   } catch (err) {
     console.error(err);
@@ -70,8 +76,7 @@ router.get("/student/:id", protect, recruiterOnly, async (req, res) => {
   }
 });
 
-// GET student resume
-router.get("/student-resume/:id", protect, recruiterOnly, async (req, res) => {
+router.get("/student-resume/:id", async (req, res) => {
   try {
     const student = await User.findById(req.params.id).select('resumeUrl name');
     if (!student) return res.status(404).json({ message: "Student not found" });
@@ -96,10 +101,8 @@ router.get("/student-resume/:id", protect, recruiterOnly, async (req, res) => {
   }
 });
 
-// GET application history
-router.get("/application-history", protect, recruiterOnly, async (req, res) => {
+router.get("/application-history", async (req, res) => {
   try {
-    const Application = (await import('../models/ApplicationModel.js')).default;
     const applications = await Application.find({ recruiter: req.user._id })
       .populate('student', 'name email department year')
       .populate('job', 'title company')
@@ -113,12 +116,8 @@ router.get("/application-history", protect, recruiterOnly, async (req, res) => {
   }
 });
 
-// GET applications for recruiter's jobs (mentor-approved)
-router.get("/applications", protect, recruiterOnly, async (req, res) => {
+router.get("/applications", async (req, res) => {
   try {
-    const Application = (await import('../models/ApplicationModel.js')).default;
-    
-    // Get applications for this recruiter's jobs that are mentor-approved
     const applications = await Application.find({
       recruiter: req.user._id,
       status: { $in: ['pending recruiter review', 'interview scheduled', 'hired'] }

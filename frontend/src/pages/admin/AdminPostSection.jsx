@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import {
   Plus,
-  Briefcase,
-  Building,
-  MapPin,
-  DollarSign,
-  ExternalLink,
+  Megaphone,
+  Calendar,
+  AlertCircle,
   History,
   FileText,
   Edit,
   Trash2,
-  Users,
+  Bell,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -24,27 +22,25 @@ const AdminPostSection = () => {
   const [applications, setApplications] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
-    company: "",
-    type: "Internship",
-    location: "",
-    description: "",
-    requirements: "",
-    stipend: "",
-    applyLink: "",
+    content: "",
+    type: "general",
+    priority: "medium",
+    targetAudience: "all",
+    expiresAt: "",
   });
 
   const fetchPosts = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/posts", {
+      const res = await fetch("http://localhost:5000/api/admin/posts", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to fetch posts");
+      if (!res.ok) throw new Error("Failed to fetch announcements");
       const data = await res.json();
       setPosts(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load posts");
+      toast.error("Failed to load announcements");
     } finally {
       setLoading(false);
     }
@@ -53,15 +49,15 @@ const AdminPostSection = () => {
   const fetchPostHistory = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5000/api/posts/history", {
+      const res = await fetch("http://localhost:5000/api/admin/post-history", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to fetch post history");
+      if (!res.ok) throw new Error("Failed to fetch announcement history");
       const data = await res.json();
       setPostHistory(data);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load post history");
+      toast.error("Failed to load announcement history");
     }
   };
 
@@ -80,8 +76,8 @@ const AdminPostSection = () => {
     const token = localStorage.getItem("token");
     try {
       const url = editingPost
-        ? `http://localhost:5000/api/posts/${editingPost._id}`
-        : "http://localhost:5000/api/posts";
+        ? `http://localhost:5000/api/admin/posts/${editingPost._id}`
+        : "http://localhost:5000/api/admin/posts";
       const method = editingPost ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -95,17 +91,15 @@ const AdminPostSection = () => {
       if (!res.ok)
         throw new Error(`Failed to ${editingPost ? "update" : "create"} post`);
       toast.success(
-        `Post ${editingPost ? "updated" : "created"} successfully!`
+        `Announcement ${editingPost ? "updated" : "created"} successfully!`
       );
       setFormData({
         title: "",
-        company: "",
-        type: "Internship",
-        location: "",
-        description: "",
-        requirements: "",
-        stipend: "",
-        applyLink: "",
+        content: "",
+        type: "general",
+        priority: "medium",
+        targetAudience: "all",
+        expiresAt: "",
       });
       setEditingPost(null);
       fetchPosts();
@@ -121,17 +115,17 @@ const AdminPostSection = () => {
 
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`http://localhost:5000/api/posts/${postId}`, {
+      const res = await fetch(`http://localhost:5000/api/admin/posts/${postId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to delete post");
-      toast.success("Post deleted successfully!");
+      toast.success("Announcement deleted successfully!");
       fetchPosts();
       fetchPostHistory();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to delete post");
+      toast.error("Failed to delete announcement");
     }
   };
 
@@ -163,13 +157,11 @@ const AdminPostSection = () => {
     if (editingPost) {
       setFormData({
         title: editingPost.title || "",
-        company: editingPost.company || "",
-        type: editingPost.type || "Internship",
-        location: editingPost.location || "",
-        description: editingPost.description || "",
-        requirements: editingPost.requirements || "",
-        stipend: editingPost.stipend || "",
-        applyLink: editingPost.applyLink || "",
+        content: editingPost.content || "",
+        type: editingPost.type || "general",
+        priority: editingPost.priority || "medium",
+        targetAudience: editingPost.targetAudience || "all",
+        expiresAt: editingPost.expiresAt ? new Date(editingPost.expiresAt).toISOString().slice(0, 16) : "",
       });
     }
   }, [editingPost]);
@@ -191,10 +183,10 @@ const AdminPostSection = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">
-            Job & Internship Posts
+            Announcements
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Create and manage job postings
+            Create and manage announcements for students, mentors, and recruiters
           </p>
         </div>
         <button
@@ -202,49 +194,33 @@ const AdminPostSection = () => {
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
         >
           <History size={16} />
-          {showHistory ? "Show Active Posts" : "Show Post History"}
+          {showHistory ? "Show Active Announcements" : "Show History"}
         </button>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 p-6">
         <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Plus className="w-5 h-5" />
-          {editingPost ? "Edit Post" : "Post New Job"}
+          {editingPost ? "Edit Announcement" : "Create New Announcement"}
         </h2>
 
         <form onSubmit={handlePostSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Job Title
-              </label>
-              <input
-                type="text"
-                name="title"
-                placeholder="e.g., Software Developer Intern"
-                value={formData.title}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Company Name
-              </label>
-              <input
-                type="text"
-                name="company"
-                placeholder="e.g., Tech Corp"
-                value={formData.company}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Announcement Title
+            </label>
+            <input
+              type="text"
+              name="title"
+              placeholder="e.g., Important Update: Placement Drive Schedule"
+              value={formData.title}
+              onChange={handleInputChange}
+              className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              required
+            />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Type
@@ -255,81 +231,72 @@ const AdminPostSection = () => {
                 onChange={handleInputChange}
                 className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
-                <option value="Internship">Internship</option>
-                <option value="Job">Job</option>
+                <option value="general">General</option>
+                <option value="placement">Placement</option>
+                <option value="academic">Academic</option>
+                <option value="event">Event</option>
+                <option value="urgent">Urgent</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Location
+                Priority
               </label>
-              <input
-                type="text"
-                name="location"
-                placeholder="e.g., Remote, New York, Hybrid"
-                value={formData.location}
+              <select
+                name="priority"
+                value={formData.priority}
                 onChange={handleInputChange}
                 className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Target Audience
+              </label>
+              <select
+                name="targetAudience"
+                value={formData.targetAudience}
+                onChange={handleInputChange}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="all">All Users</option>
+                <option value="student">Students Only</option>
+                <option value="mentor">Mentors Only</option>
+                <option value="recruiter">Recruiters Only</option>
+              </select>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Job Description
+              Announcement Content
             </label>
             <textarea
-              name="description"
-              placeholder="Describe the role, responsibilities, and requirements..."
-              value={formData.description}
+              name="content"
+              placeholder="Write your announcement content here..."
+              value={formData.content}
               onChange={handleInputChange}
               className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              rows={3}
+              rows={4}
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Requirements & Skills
+              Expires At (Optional)
             </label>
             <input
-              type="text"
-              name="requirements"
-              placeholder="React, Node.js, Python (comma separated)"
-              value={formData.requirements}
+              type="datetime-local"
+              name="expiresAt"
+              value={formData.expiresAt}
               onChange={handleInputChange}
               className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Stipend/Salary
-              </label>
-              <input
-                type="text"
-                name="stipend"
-                placeholder="e.g., $50,000/year, ₹25,000/month"
-                value={formData.stipend}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Application Link
-              </label>
-              <input
-                type="url"
-                name="applyLink"
-                placeholder="https://company.com/apply"
-                value={formData.applyLink}
-                onChange={handleInputChange}
-                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
           </div>
 
           <div className="flex gap-3">
@@ -338,7 +305,7 @@ const AdminPostSection = () => {
               type="submit"
             >
               <Plus className="w-4 h-4" />
-              {editingPost ? "Update Post" : "Post Job Opening"}
+              {editingPost ? "Update Announcement" : "Create Announcement"}
             </button>
             {editingPost && (
               <button
@@ -347,13 +314,11 @@ const AdminPostSection = () => {
                   setEditingPost(null);
                   setFormData({
                     title: "",
-                    company: "",
-                    type: "Internship",
-                    location: "",
-                    description: "",
-                    requirements: "",
-                    stipend: "",
-                    applyLink: "",
+                    content: "",
+                    type: "general",
+                    priority: "medium",
+                    targetAudience: "all",
+                    expiresAt: "",
                   });
                 }}
                 className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
@@ -367,20 +332,20 @@ const AdminPostSection = () => {
 
       <div>
         <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Briefcase className="w-5 h-5" />
-          Your Job Posts ({(showHistory ? postHistory : posts).length})
+          <Megaphone className="w-5 h-5" />
+          Your Announcements ({(showHistory ? postHistory : posts).length})
         </h2>
 
         {(showHistory ? postHistory : posts).length === 0 ? (
           <div className="text-center py-16">
-            <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <Megaphone className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-600 mb-2">
-              {showHistory ? "No post history" : "No Job Posts Yet"}
+              {showHistory ? "No announcement history" : "No Announcements Yet"}
             </h3>
             <p className="text-gray-500">
               {showHistory
-                ? "No posts have been created yet"
-                : "Create your first job posting to start recruiting"}
+                ? "No announcements have been created yet"
+                : "Create your first announcement to notify users"}
             </p>
           </div>
         ) : (
@@ -391,76 +356,59 @@ const AdminPostSection = () => {
                 className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-lg transition-all duration-200"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 mb-2">
                       {post.title}
                     </h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
                       <div className="flex items-center gap-1">
-                        <Building size={14} />
-                        {post.company}
+                        <Calendar size={14} />
+                        {new Date(post.createdAt).toLocaleDateString()}
                       </div>
-                      {post.location && (
+                      <div className="flex items-center gap-1">
+                        <Bell size={14} />
+                        {post.targetAudience}
+                      </div>
+                      {post.expiresAt && (
                         <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          {post.location}
-                        </div>
-                      )}
-                      {post.stipend && (
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4" />
-                          {post.stipend}
+                          <AlertCircle size={14} />
+                          Expires: {new Date(post.expiresAt).toLocaleDateString()}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      post.type === "Job"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-indigo-100 text-indigo-700"
-                    }`}
-                  >
-                    {post.type}
-                  </span>
+                  <div className="flex gap-2">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        post.priority === "high"
+                          ? "bg-red-100 text-red-700"
+                          : post.priority === "medium"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {post.priority}
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        post.type === "urgent"
+                          ? "bg-red-100 text-red-700"
+                          : post.type === "placement"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {post.type}
+                    </span>
+                  </div>
                 </div>
 
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {post.description}
+                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                  {post.content}
                 </p>
 
-                {post.requirements && (
-                  <div className="mb-4">
-                    <div className="flex flex-wrap gap-2">
-                      {post.requirements
-                        .split(",")
-                        .slice(0, 3)
-                        .map((req, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-full"
-                          >
-                            {req.trim()}
-                          </span>
-                        ))}
-                      {post.requirements.split(",").length > 3 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                          +{post.requirements.split(",").length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setViewingApplications(post._id)}
-                    className="flex items-center gap-2 px-3 py-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors text-sm font-medium"
-                  >
-                    <Users className="w-4 h-4" />
-                    View Applications
-                  </button>
                   <button
                     onClick={() => setEditingPost(post)}
                     className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm font-medium"
@@ -482,69 +430,7 @@ const AdminPostSection = () => {
         )}
       </div>
 
-      {/* Applications Modal */}
-      {viewingApplications && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-medium text-gray-900">Applications</h3>
-              <button
-                onClick={() => setViewingApplications(null)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
-              {applications.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">
-                  No applications yet
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {applications.map((app) => (
-                    <div
-                      key={app._id}
-                      className="border border-gray-200 rounded p-3"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-gray-900">
-                            {app.student?.name}
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            {app.student?.email}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {app.student?.department} • CGPA:{" "}
-                            {app.student?.cgpa}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span
-                            className={`px-2 py-1 text-xs rounded ${
-                              app.status === "pending"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : app.status === "approved"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {app.status}
-                          </span>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {new Date(app.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

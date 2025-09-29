@@ -10,6 +10,7 @@ import mentorRoutes from "./routes/mentorRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
+import recommendationRoutes from "./routes/recommendationRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -36,8 +37,14 @@ app.use(cors({
   credentials: true
 }));
 
-// Serve static files from uploads directory
-app.use('/uploads', express.static('uploads'));
+// Serve static files from uploads directory with proper headers for PDFs
+app.use('/uploads', (req, res, next) => {
+  if (req.path.endsWith('.pdf')) {
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline');
+  }
+  next();
+}, express.static('uploads'));
 
 // Connect DB
 connectDB();
@@ -59,6 +66,7 @@ app.use("/api/mentor", mentorRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/recommendations", recommendationRoutes);
 
 
 
