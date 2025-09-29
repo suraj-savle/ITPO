@@ -75,37 +75,20 @@ export default function RecruiterJobs() {
     const newStatus = !currentStatus;
     const action = newStatus ? "activate" : "deactivate";
     
-    console.log('Toggle job status:', { jobId, currentStatus, newStatus, action });
-    
     if (!window.confirm(`Are you sure you want to ${action} this job?`)) {
       return;
     }
 
     try {
-      console.log('Making API request to:', `http://localhost:5000/api/jobs/${jobId}/toggle`);
-      console.log('Request payload:', { isActive: newStatus });
-      
-      // Test if the route exists first
-      try {
-        const testResponse = await axios.get(`http://localhost:5000/api/jobs/${jobId}/toggle-test`, 
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        console.log('Test route response:', testResponse.data);
-      } catch (testErr) {
-        console.log('Test route error:', testErr.response?.status);
-      }
-      
-      const response = await axios.put(`http://localhost:5000/api/jobs/${jobId}/toggle`, 
+      await axios.put(`http://localhost:5000/api/jobs/${jobId}/toggle`, 
         { isActive: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      console.log('API response:', response.data);
       toast.success(`Job ${action}d successfully!`);
       fetchJobs();
     } catch (err) {
-      console.error('Toggle job error:', err);
-      console.error('Error response:', err.response?.data);
+      console.error(err);
       toast.error(err.response?.data?.message || `Error ${action}ing job`);
     }
   };

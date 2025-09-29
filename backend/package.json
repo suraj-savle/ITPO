@@ -9,6 +9,7 @@
     "debug": "node start-debug.js"
   },
   "dependencies": {
+    "@ljharb/tsconfig": "^0.3.2",
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

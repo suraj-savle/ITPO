@@ -118,13 +118,7 @@ export const getJobById = async (req, res) => {
 // Toggle job active status (recruiter)
 export const toggleJobActive = async (req, res) => {
   try {
-    console.log('Toggle job active - params:', req.params);
-    console.log('Toggle job active - body:', req.body);
-    console.log('Toggle job active - user:', req.user?._id);
-    
     const job = await Job.findById(req.params.id);
-    console.log('Found job:', job ? 'Yes' : 'No');
-    
     if (!job) return res.status(404).json({ message: "Job not found" });
     
     // Only creator recruiter may toggle (you can also allow admin)
@@ -133,8 +127,6 @@ export const toggleJobActive = async (req, res) => {
     }
     
     const newStatus = !!req.body.isActive;
-    console.log('Setting job active status to:', newStatus);
-    
     job.isActive = newStatus;
     
     // Add activity log for recruiter
@@ -148,7 +140,6 @@ export const toggleJobActive = async (req, res) => {
     });
     
     await job.save();
-    console.log('Job saved successfully');
     res.json(job);
   } catch (err) {
     console.error("Toggle Job Active Error:", err);
