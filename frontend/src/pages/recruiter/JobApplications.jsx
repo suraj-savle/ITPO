@@ -102,7 +102,7 @@ const JobApplications = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100  mx-auto p-4  space-y-6">
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate("/recruiter/post")}
