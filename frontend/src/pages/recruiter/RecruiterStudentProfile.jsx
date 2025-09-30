@@ -85,8 +85,8 @@ const RecruiterStudentProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100">
-      <div className="max-w-7xl mx-auto p-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {/* Header with Back Button */}
         <div className="mb-8">
           <button
@@ -96,82 +96,74 @@ const RecruiterStudentProfile = () => {
             <ArrowLeft size={20} />
             Back to Students
           </button>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-gray-900">
             Student Profile
           </h1>
           <p className="text-gray-600 mt-1">Complete profile overview</p>
         </div>
 
         {/* Profile Header Card */}
-        <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-3xl shadow-2xl p-8 text-white mb-8 relative overflow-hidden">
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-sm"></div>
-          <div className="relative z-10">
-            <div className="flex flex-col lg:flex-row items-center gap-8">
-              {/* Avatar */}
-              <div className="relative">
-                <img
-                  src={
-                    student.profileImage ||
-                    "https://api.dicebear.com/7.x/avataaars/svg?seed=1"
-                  }
-                  alt={student.name}
-                  className="w-32 h-32 rounded-full object-cover border-4 border-white/40 shadow-2xl"
-                />
-                <div className="absolute -bottom-2 -right-2 bg-green-400 p-2 rounded-full border-3 border-white shadow-lg">
-                  <div className="w-4 h-4 rounded-full bg-white animate-pulse"></div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex flex-col lg:flex-row items-center gap-6">
+            {/* Avatar */}
+            <div className="relative">
+              <img
+                src={
+                  student.profileImage ||
+                  "https://api.dicebear.com/7.x/avataaars/svg?seed=1"
+                }
+                alt={student.name}
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+              />
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1 text-center lg:text-left">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{student.name}</h1>
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-3">
+                <div className="bg-gray-100 rounded-full px-3 py-1 flex items-center gap-2">
+                  <GraduationCap size={14} />
+                  <span className="text-sm text-gray-700">
+                    {student.course}
+                  </span>
+                </div>
+                <div className="bg-gray-100 rounded-full px-3 py-1 flex items-center gap-2">
+                  <MapPin size={14} />
+                  <span className="text-sm text-gray-700">
+                    {student.department}
+                  </span>
+                </div>
+                <div className="bg-gray-100 rounded-full px-3 py-1 flex items-center gap-2">
+                  <Calendar size={14} />
+                  <span className="text-sm text-gray-700">
+                    {student.year}
+                  </span>
                 </div>
               </div>
+              <p className="text-gray-600 leading-relaxed">
+                {student.description || "No description provided."}
+              </p>
+            </div>
 
-              {/* Profile Info */}
-              <div className="flex-1 text-center lg:text-left space-y-4">
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">{student.name}</h1>
-                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-4">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
-                      <GraduationCap size={16} />
-                      <span className="text-sm font-medium">
-                        {student.course}
-                      </span>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
-                      <MapPin size={16} />
-                      <span className="text-sm font-medium">
-                        {student.department}
-                      </span>
-                    </div>
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2">
-                      <Calendar size={16} />
-                      <span className="text-sm font-medium">
-                        {student.year}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-white/90 text-lg leading-relaxed max-w-2xl">
-                    {student.description || "No description provided."}
-                  </p>
+            {/* Stats */}
+            <div className="flex lg:flex-col gap-6 lg:gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900 mb-1">
+                  {student.cgpa || 0}
                 </div>
+                <p className="text-gray-600 text-sm">CGPA</p>
               </div>
-
-              {/* Stats */}
-              <div className="flex lg:flex-col gap-6 lg:gap-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold mb-1">
-                    {student.cgpa || 0}
-                  </div>
-                  <p className="text-white/80 text-sm font-medium">CGPA</p>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900 mb-1">
+                  {student.skills?.length || 0}
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold mb-1">
-                    {student.skills?.length || 0}
-                  </div>
-                  <p className="text-white/80 text-sm font-medium">Skills</p>
+                <p className="text-gray-600 text-sm">Skills</p>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900 mb-1">
+                  {student.projects?.length || 0}
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold mb-1">
-                    {student.projects?.length || 0}
-                  </div>
-                  <p className="text-white/80 text-sm font-medium">Projects</p>
-                </div>
+                <p className="text-gray-600 text-sm">Projects</p>
               </div>
             </div>
           </div>
@@ -179,11 +171,9 @@ const RecruiterStudentProfile = () => {
 
         {/* Contact & Resume Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg">
-                <Mail size={20} className="text-white" />
-              </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Mail size={18} className="text-gray-600" />
               Contact Info
             </h3>
             <div className="space-y-3">
@@ -204,11 +194,9 @@ const RecruiterStudentProfile = () => {
             </div>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
-                <Award size={20} className="text-white" />
-              </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Award size={18} className="text-gray-600" />
               Academic
             </h3>
             <div className="space-y-3">
@@ -229,11 +217,9 @@ const RecruiterStudentProfile = () => {
             </div>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
-                <FileText size={20} className="text-white" />
-              </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <FileText size={18} className="text-gray-600" />
               Resume
             </h3>
             {student.resumeUrl ? (
@@ -247,7 +233,7 @@ const RecruiterStudentProfile = () => {
                       toast.error("No resume uploaded");
                     }
                   }}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-indigo-700 hover:to-indigo-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
+                  className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <FileText size={16} />
                   View Resume
@@ -290,7 +276,7 @@ const RecruiterStudentProfile = () => {
                       toast.error("No resume uploaded");
                     }
                   }}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
+                  className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <Download size={16} />
                   Download Resume
@@ -303,18 +289,16 @@ const RecruiterStudentProfile = () => {
         </div>
 
         {/* Skills Section */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20 mb-8">
-          <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg">
-              <Award size={20} className="text-white" />
-            </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Award size={18} className="text-gray-600" />
             Skills & Expertise
           </h3>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {(student.skills || []).map((skill, index) => (
               <span
                 key={index}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-full font-medium shadow-lg hover:shadow-xl transition-shadow"
+                className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
               >
                 {skill}
               </span>
@@ -328,11 +312,9 @@ const RecruiterStudentProfile = () => {
         {/* Projects & Experience */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Projects */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-indigo-500 to-cyan-600 rounded-lg">
-                <Briefcase size={20} className="text-white" />
-              </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Briefcase size={18} className="text-gray-600" />
               Projects ({student.projects?.length || 0})
             </h3>
             <div className="space-y-6">
@@ -393,11 +375,9 @@ const RecruiterStudentProfile = () => {
           </div>
 
           {/* Experience */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg">
-                <Building size={20} className="text-white" />
-              </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Building size={18} className="text-gray-600" />
               Experience ({student.experiences?.length || 0})
             </h3>
             <div className="space-y-6">
@@ -430,11 +410,9 @@ const RecruiterStudentProfile = () => {
         </div>
 
         {/* Social Links */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-lg">
-              <Link size={20} className="text-white" />
-            </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Link size={18} className="text-gray-600" />
             Social Profiles
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -463,7 +441,7 @@ const RecruiterStudentProfile = () => {
                     href={url.startsWith("http") ? url : `https://${url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl hover:shadow-md transition-shadow bg-white/50"
+                    className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {getIcon(platform)}

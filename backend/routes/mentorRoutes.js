@@ -6,7 +6,10 @@ import {
   getDashboard,
   getPendingApplications,
   getProgressTracking,
-  testMentor 
+  testMentor,
+  approveApplication,
+  rejectApplication,
+  getStudentProfile
 } from "../controllers/mentorController.js";
 import { protect, mentorOnly } from "../middleware/authMiddleware.js";
 
@@ -39,23 +42,12 @@ router.get("/dashboard", getDashboard);
 router.get("/mentees", getMentees);
 router.get("/pending-applications", getPendingApplications);
 router.get("/progress-tracking", getProgressTracking);
-router.get("/student-profile/:studentId", async (req, res) => {
-  try {
-    const User = (await import('../models/UserModel.js')).default;
-    const student = await User.findOne({ 
-      _id: req.params.studentId, 
-      assignedMentor: req.user._id 
-    }).select('-password');
-    
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found or not your mentee' });
-    }
-    
-    res.json(student);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+router.get("/student-profile/:studentId", getStudentProfile);
+router.get("/student/:studentId", getStudentProfile);
+
+// Application management routes
+router.put("/applications/:applicationId/approve", approveApplication);
+router.put("/applications/:applicationId/reject", rejectApplication);
 
 router.get("/student-resume/:studentId", async (req, res) => {
   try {

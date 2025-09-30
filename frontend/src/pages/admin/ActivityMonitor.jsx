@@ -20,19 +20,26 @@ const ActivityMonitor = () => {
     try {
       const [activitiesRes, statusRes] = await Promise.all([
         makeAuthenticatedRequest(
-          `/api/admin/activities${selectedRole ? `?role=${selectedRole}` : ""}`
+          `http://localhost:5000/api/admin/activities${selectedRole ? `?role=${selectedRole}` : ""}`,
+          {},
+          null
         ),
         makeAuthenticatedRequest(
-          `/api/admin/users-status${
+          `http://localhost:5000/api/admin/users-status${
             selectedRole ? `?role=${selectedRole}` : ""
-          }`
+          }`,
+          {},
+          null
         ),
       ]);
 
-      if (activitiesRes.success) setActivities(activitiesRes.activities);
-      if (statusRes.success) {
-        setUsersStatus(statusRes.users);
-        setStatusSummary(statusRes.statusSummary);
+      const activitiesData = await activitiesRes.json();
+      const statusData = await statusRes.json();
+      
+      if (activitiesData.success) setActivities(activitiesData.activities);
+      if (statusData.success) {
+        setUsersStatus(statusData.users);
+        setStatusSummary(statusData.statusSummary);
       }
     } catch (error) {
       toast.error("Failed to fetch activity data");

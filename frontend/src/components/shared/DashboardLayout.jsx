@@ -19,6 +19,7 @@ import {
 
 const DashboardLayout = ({ userRole = "student" }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
@@ -71,6 +72,7 @@ const DashboardLayout = ({ userRole = "student" }) => {
         { path: "/student", label: "Dashboard", icon: BarChart3 },
         { path: "/student/profile", label: "Profile", icon: User },
         { path: "/student/jobs", label: "Job Openings", icon: Briefcase },
+        { path: "/student/recommendations", label: "Job Recommendations", icon: CheckCircle },
         {
           path: "/student/applications",
           label: "My Applications",
@@ -82,7 +84,8 @@ const DashboardLayout = ({ userRole = "student" }) => {
     mentor: {
       title: "Campus Connect - Mentor",
       items: [
-        { path: "/mentor", label: "My Mentees", icon: Users },
+        { path: "/mentor", label: "Dashboard", icon: BarChart3 },
+        { path: "/mentor/mentees", label: "My Students", icon: Users },
         {
           path: "/mentor/approvals",
           label: "Pending Approvals",
@@ -104,11 +107,12 @@ const DashboardLayout = ({ userRole = "student" }) => {
       title: "Recruiter Portal",
       items: [
         { path: "/recruiter", label: "Dashboard", icon: BarChart3 },
+        { path: "/recruiter/jobs", label: "Job Management", icon: Briefcase },
+        { path: "/recruiter/applications", label: "Applications", icon: Users },
         { path: "/recruiter/students", label: "Students", icon: Users },
-        { path: "/recruiter/post", label: "Job Posts", icon: Briefcase },
         {
           path: "/recruiter/history",
-          label: "Application History",
+          label: "History",
           icon: History,
         },
       ],
@@ -117,14 +121,11 @@ const DashboardLayout = ({ userRole = "student" }) => {
       title: "ITPO Portal - Placement Cell",
       items: [
         { path: "/admin", label: "Dashboard", icon: BarChart3 },
-        {
-          path: "/admin/approvals",
-          label: "Student Approvals",
-          icon: CheckCircle,
-        },
+        { path: "/admin/user-approvals", label: "User Approvals", icon: CheckCircle },
+        { path: "/admin/job-verification", label: "Job Verification", icon: Briefcase },
         { path: "/admin/users", label: "User Management", icon: Users },
         { path: "/admin/activities", label: "Activity Monitor", icon: Activity },
-        { path: "/admin/post", label: "Post", icon: Megaphone },
+        { path: "/admin/post", label: "Announcements", icon: Megaphone },
       ],
     },
   };
@@ -185,10 +186,23 @@ const DashboardLayout = ({ userRole = "student" }) => {
         <aside
           className={`${
             sidebarOpen ? "translate-x-0 translate-y-20 w-full" : "-translate-x-full"
-          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transition-transform duration-300`}
+          } lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 ${
+            sidebarCollapsed ? "w-16" : "w-64"
+          } bg-white shadow-lg transition-all duration-300`}
         >
-          <div className="px-6 py-4">
-            <h2 className="text-lg font-semibold text-indigo-800 mb-6">Menu</h2>
+          <div className="px-3 py-4">
+            {/* Collapse Toggle - Desktop Only */}
+            <div className="hidden lg:flex justify-end mb-4">
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <Menu size={16} className={`transition-transform duration-300 ${
+                  sidebarCollapsed ? "rotate-180" : ""
+                }`} />
+              </button>
+            </div>
+            
             <nav className="flex flex-col gap-2">
               {config.items.map((item) => {
                 const Icon = item.icon;
@@ -200,18 +214,30 @@ const DashboardLayout = ({ userRole = "student" }) => {
                       navigate(item.path);
                       setSidebarOpen(false);
                     }}
-                    className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${
+                    className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors relative group ${
                       isActive
                         ? "bg-indigo-50 text-indigo-600 font-semibold"
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
+                    title={sidebarCollapsed ? item.label : ""}
                   >
-                    {typeof Icon === "string" ? (
-                      <span>{Icon}</span>
-                    ) : (
-                      <Icon size={20} />
+                    <div className="flex items-center justify-center w-5 h-5 flex-shrink-0">
+                      {typeof Icon === "string" ? (
+                        <span className="text-lg">{Icon}</span>
+                      ) : (
+                        <Icon size={20} className="flex-shrink-0" />
+                      )}
+                    </div>
+                    {!sidebarCollapsed && (
+                      <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
                     )}
-                    {item.label}
+                    
+                    {/* Tooltip for collapsed state */}
+                    {sidebarCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        {item.label}
+                      </div>
+                    )}
                   </button>
                 );
               })}
@@ -220,7 +246,9 @@ const DashboardLayout = ({ userRole = "student" }) => {
         </aside>
 
         {/* CONTENT */}
-        <main className="flex-1 bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100">
+        <main className={`flex-1 bg-gradient-to-br from-slate-50 via-indigo-50 to-indigo-100 transition-all duration-300 ${
+          sidebarCollapsed ? "lg:ml-0" : ""
+        }`}>
           <Outlet />
         </main>
       </div>

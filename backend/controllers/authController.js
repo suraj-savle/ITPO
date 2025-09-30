@@ -1,4 +1,5 @@
 import User from "../models/UserModel.js";
+import NotificationService from "../services/notificationService.js";
 import jwt from "jsonwebtoken";
 
 const generateToken = (id) => {
@@ -78,6 +79,78 @@ export const registerStudent = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Registration successful. Awaiting admin approval.",
+      token,
+      user: user.getPublicProfile(),
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
+
+// @route POST /api/auth/register
+export const register = async (req, res) => {
+  try {
+    const { name, email, password, phone, department, year, rollNo, cgpa, skills, role, company, status } = req.body;
+    
+    const isRecruiter = role === "recruiter";
+    
+    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    if (existingEmail) {
+      return res.status(400).json({ 
+        message: "This email address is already registered",
+        field: "email"
+      });
+    }
+    
+    if (rollNo) {
+      const existingRollNo = await User.findOne({ rollNo });
+      if (existingRollNo) {
+        return res.status(400).json({ 
+          message: "This roll number is already registered",
+          field: "rollNo"
+        });
+      }
+    }
+
+    const userData = { 
+      name, 
+      email, 
+      password, 
+      phone,
+      role: role || "student"
+    };
+    
+    if (!isRecruiter) {
+      userData.department = department;
+      userData.year = year;
+      userData.rollNo = rollNo;
+      userData.cgpa = parseFloat(cgpa) || 0;
+      userData.skills = skills || [];
+      userData.status = "pending";
+    }
+    
+    if (isRecruiter) {
+      userData.company = company;
+      userData.status = "pending";
+    }
+
+    const user = new User(userData);
+    await user.save();
+
+    // Skip notifications for now to avoid registration issues
+    // if (isRecruiter) {
+    //   try {
+    //     await NotificationService.notifyRecruiterRegistration(user._id, company, name);
+    //   } catch (error) {
+    //     console.error("Notification error (non-blocking):", error);
+    //   }
+    // }
+
+    const token = generateToken(user._id);
+
+    res.status(201).json({
+      success: true,
+      message: isRecruiter ? "Registration submitted. Awaiting admin approval." : "Registration successful. Awaiting admin approval.",
       token,
       user: user.getPublicProfile(),
     });

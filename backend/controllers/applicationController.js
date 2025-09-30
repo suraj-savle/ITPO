@@ -48,9 +48,17 @@ export const applyToJob = async (req, res) => {
     await Application.create({
       student: studentId,
       job: jobId,
-      mentor: student?.assignedMentor,
+      mentor: student?.assignedMentor || null,
       recruiter: job.recruiter
     });
+
+    // Update existing applications if mentor was recently assigned
+    if (student?.assignedMentor) {
+      await Application.updateMany(
+        { student: studentId, mentor: null },
+        { mentor: student.assignedMentor }
+      );
+    }
 
     // Add activity log
     await User.findByIdAndUpdate(studentId, {
@@ -185,16 +193,23 @@ export const recruiterDecision = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    const { action, recruiterNote, interviewDate } = req.body;
+    const { action, recruiterNote, interviewDate, interviewTime, interviewMode, interviewLocation, interviewMeetingLink, interviewNotes } = req.body;
 
     if (action === "reject") {
       app.status = "rejected by recruiter";
       app.recruiterNote = recruiterNote || "";
       app.rejectedAt = new Date();
     } else if (action === "schedule") {
-      if (!interviewDate) return res.status(400).json({ message: "interviewDate required" });
+      if (!interviewDate || !interviewTime) {
+        return res.status(400).json({ message: "Interview date and time are required" });
+      }
       app.status = "interview scheduled";
       app.interviewDate = new Date(interviewDate);
+      app.interviewTime = interviewTime;
+      app.interviewMode = interviewMode || 'online';
+      app.interviewLocation = interviewLocation || '';
+      app.interviewMeetingLink = interviewMeetingLink || '';
+      app.interviewNotes = interviewNotes || '';
       app.recruiterNote = recruiterNote || "";
     } else if (action === "hire") {
       app.status = "hired";
@@ -202,8 +217,10 @@ export const recruiterDecision = async (req, res) => {
       
       // Update student placement status when hired
       if (app.student) {
-        const User = (await import('../models/UserModel.js')).default;
         const recruiter = await User.findById(app.recruiter).select('company name');
+        const student = await User.findById(app.student._id);
+        
+        // Update student as placed
         await User.findByIdAndUpdate(app.student._id, {
           isPlaced: true,
           placementDetails: {
@@ -211,6 +228,36 @@ export const recruiterDecision = async (req, res) => {
             roleOffered: app.job?.title || 'Position',
             package: app.job?.stipend || 'Not specified',
             placedAt: new Date()
+          },
+          $push: { 
+            activityLog: { 
+              action: `Hired for ${app.job?.title} at ${recruiter?.company || recruiter?.name}`, 
+              date: new Date() 
+            } 
+          }
+        });
+        
+        // Notify mentor if student has one
+        if (student?.assignedMentor) {
+          await User.findByIdAndUpdate(student.assignedMentor, {
+            $push: { 
+              activityLog: { 
+                action: `Student ${student.name} was hired for ${app.job?.title}`, 
+                date: new Date() 
+              } 
+            }
+          });
+        }
+        
+        // Deactivate the job if it was filled
+        const Job = (await import('../models/JobModel.js')).default;
+        await Job.findByIdAndUpdate(app.job._id, {
+          isActive: false,
+          $push: { 
+            activityLog: { 
+              action: `Job filled - ${student.name} hired`, 
+              date: new Date() 
+            } 
           }
         });
       }

@@ -8,16 +8,40 @@ import {
   getAllUsers,
   getMentors,
   assignMentorToStudent,
+  assignMentor,
   getUserActivities,
   getUsersStatus 
 } from "../controllers/adminController.js";
+import {
+  getPendingUsers,
+  approveUser,
+  getPendingJobs,
+  reviewJob,
+  getDashboardStats,
+  getApplicationStats,
+  getApplicationsOverview,
+  sendBulkNotification,
+  generateReport
+} from "../controllers/placementController.js";
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
-import { getAllPosts, createPost, deletePost, getPostHistory } from "../controllers/postController.js";
+import { getAllPosts, createPost, updatePost, deletePost, getPostHistory } from "../controllers/postController.js";
 
 const router = express.Router();
 
 router.use(protect, adminOnly);
 
+// Enhanced placement cell routes
+router.get("/dashboard/stats", getDashboardStats);
+router.get("/users/pending", getPendingUsers);
+router.put("/users/:userId/approve", approveUser);
+router.get("/jobs/pending", getPendingJobs);
+router.put("/jobs/:jobId/review", reviewJob);
+router.get("/applications/stats", getApplicationStats);
+router.get("/applications/overview", getApplicationsOverview);
+router.post("/notifications/bulk", sendBulkNotification);
+router.get("/reports", generateReport);
+
+// Legacy routes
 router.get("/dashboard", getDashboard);
 router.post("/create-user", createUser);
 router.get("/pending-students", getPendingStudents);
@@ -26,6 +50,7 @@ router.delete("/reject-student/:id", rejectStudent);
 router.get("/users", getAllUsers);
 router.get("/mentors", getMentors);
 router.put("/assign-mentor", assignMentorToStudent);
+router.put("/assign-mentor/:studentId", assignMentor);
 router.delete("/delete-user/:id", async (req, res) => {
   try {
     const User = (await import('../models/UserModel.js')).default;
@@ -59,6 +84,7 @@ router.delete("/delete-user/:id", async (req, res) => {
 // Post routes
 router.get("/posts", getAllPosts);
 router.post("/posts", createPost);
+router.put("/posts/:id", updatePost);
 router.delete("/posts/:id", deletePost);
 router.get("/post-history", getPostHistory);
 

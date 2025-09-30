@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
+import AnnouncementBanner from "../../components/AnnouncementBanner";
 
 export default function StudentHome() {
   const navigate = useNavigate();
@@ -114,6 +115,9 @@ export default function StudentHome() {
           Here's your internship progress overview
         </p>
       </div>
+
+      {/* Announcements */}
+      <AnnouncementBanner />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

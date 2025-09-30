@@ -183,6 +183,36 @@ export const assignMentorToStudent = async (req, res) => {
   }
 };
 
+export const assignMentor = async (req, res) => {
+  try {
+    const { mentorId } = req.body;
+    const studentId = req.params.studentId;
+    
+    const student = await User.findByIdAndUpdate(
+      studentId,
+      { assignedMentor: mentorId },
+      { new: true }
+    );
+    
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    
+    // Update existing applications to include the mentor
+    await Application.updateMany(
+      { student: studentId, mentor: null },
+      { mentor: mentorId }
+    );
+    
+    res.json({
+      success: true,
+      message: "Mentor assigned successfully"
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
+
 export const deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;

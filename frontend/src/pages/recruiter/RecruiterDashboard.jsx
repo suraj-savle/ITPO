@@ -3,6 +3,7 @@ import { Users, Briefcase, Calendar, TrendingUp, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import AnnouncementBanner from "../../components/AnnouncementBanner";
 
 const RecruiterDashboard = () => {
   const [stats, setStats] = useState({
@@ -26,16 +27,16 @@ const RecruiterDashboard = () => {
       }
 
       try {
-        // Fetch recruiter profile
+        // Fetch user profile
         const profileRes = await axios.get(
-          "http://localhost:5000/api/recruiter/profile",
+          "http://localhost:5000/api/auth/profile",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
         setRecruiterInfo({
-          name: profileRes.data.name,
-          company: profileRes.data.company,
+          name: profileRes.data.user.name,
+          company: profileRes.data.user.company,
         });
 
         const jobsRes = await axios.get(
@@ -54,19 +55,32 @@ const RecruiterDashboard = () => {
         );
         const students = studentsRes.data || [];
 
-        const appsRes = await axios.get(
-          "http://localhost:5000/api/applications/recruiter",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const applications = appsRes.data || [];
+        // Use existing endpoints only
+        let applications = [];
+        try {
+          const appsRes = await axios.get(
+            "http://localhost:5000/api/recruiter/applications",
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          applications = appsRes.data || [];
+        } catch {
+          applications = [];
+        }
+        
+        const statsData = {
+          totalJobs: jobs.length,
+          activeJobs: jobs.filter(job => job.isActive).length,
+          totalApplications: applications.length,
+          approvedStudents: students.length
+        };
 
         setStats({
-          totalJobs: jobs.length,
-          activeJobs: jobs.filter((job) => job.isActive).length,
-          totalApplications: applications.length,
-          approvedStudents: students.length,
+          totalJobs: statsData.totalJobs || jobs.length,
+          activeJobs: statsData.activeJobs || jobs.filter((job) => job.isActive).length,
+          totalApplications: statsData.totalApplications || 0,
+          approvedStudents: statsData.approvedStudents || students.length,
         });
 
         setRecentJobs(jobs.slice(0, 5));
@@ -104,6 +118,9 @@ const RecruiterDashboard = () => {
           of your recruitment activities
         </p>
       </div>
+
+      {/* Announcements */}
+      <AnnouncementBanner />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-gray-100 p-6">
@@ -225,6 +242,45 @@ const RecruiterDashboard = () => {
               </p>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <h2 className="font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <button
+            onClick={() => navigate("/recruiter/jobs")}
+            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Briefcase className="w-5 h-5 text-indigo-600" />
+            <div className="text-left">
+              <div className="font-medium text-gray-900">Manage Jobs</div>
+              <div className="text-sm text-gray-500">Create and manage job postings</div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => navigate("/recruiter/applications")}
+            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Users className="w-5 h-5 text-purple-600" />
+            <div className="text-left">
+              <div className="font-medium text-gray-900">Review Applications</div>
+              <div className="text-sm text-gray-500">Manage candidate applications</div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => navigate("/recruiter/students")}
+            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <TrendingUp className="w-5 h-5 text-green-600" />
+            <div className="text-left">
+              <div className="font-medium text-gray-900">View Students</div>
+              <div className="text-sm text-gray-500">Browse student profiles</div>
+            </div>
+          </button>
         </div>
       </div>
     </div>
