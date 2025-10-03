@@ -118,11 +118,23 @@ export const approveStudent = async (req, res) => {
 
 export const rejectStudent = async (req, res) => {
   try {
-    const student = await User.findByIdAndDelete(req.params.id);
-    if (!student) return res.status(404).json({ message: "Student not found" });
-
+    console.log('Rejecting student with ID:', req.params.id);
+    
+    const student = await User.findById(req.params.id);
+    if (!student) {
+      console.log('Student not found');
+      return res.status(404).json({ message: "Student not found" });
+    }
+    
+    console.log('Found student:', student.name, student.email);
+    
+    // Delete the student
+    await User.findByIdAndDelete(req.params.id);
+    
+    console.log('Student deleted successfully');
     res.json({ success: true, message: "Student rejected and removed" });
   } catch (err) {
+    console.error('Error rejecting student:', err);
     res.status(500).json({ message: "Server Error", error: err.message });
   }
 };

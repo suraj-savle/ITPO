@@ -39,6 +39,21 @@ const UserManagement = () => {
     fetchMentors();
   }, [filter]);
 
+  // Add event listener for user approval updates
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      fetchUsers();
+    };
+    
+    window.addEventListener('userApproved', handleUserUpdate);
+    window.addEventListener('userRejected', handleUserUpdate);
+    
+    return () => {
+      window.removeEventListener('userApproved', handleUserUpdate);
+      window.removeEventListener('userRejected', handleUserUpdate);
+    };
+  }, []);
+
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");

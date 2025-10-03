@@ -38,6 +38,8 @@ export const approveUser = async (req, res) => {
     const { userId } = req.params;
     const { approved, comments } = req.body;
 
+    console.log('Approving user:', { userId, approved, comments });
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -46,13 +48,20 @@ export const approveUser = async (req, res) => {
     user.status = approved ? "active" : "rejected";
     await user.save();
 
-    await AuditService.logSecurityEvent(
-      req.user._id,
-      `user_${approved ? 'approved' : 'rejected'}`,
-      { userId, userRole: user.role, comments },
-      req,
-      "high"
-    );
+    console.log('User status updated successfully');
+
+    // Try audit service but don't fail if it errors
+    try {
+      await AuditService.logSecurityEvent(
+        req.user._id,
+        `user_${approved ? 'approved' : 'rejected'}`,
+        { userId, userRole: user.role, comments },
+        req,
+        "high"
+      );
+    } catch (auditError) {
+      console.error('Audit service error (non-blocking):', auditError);
+    }
 
     res.json({
       message: `User ${approved ? 'approved' : 'rejected'} successfully`,

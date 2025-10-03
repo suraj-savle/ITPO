@@ -59,6 +59,11 @@ const UserApprovals = () => {
       setSelectedUser(null);
       setComments("");
       fetchPendingUsers();
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent(actionType === 'approve' ? 'userApproved' : 'userRejected', {
+        detail: { userId: selectedUser._id, action: actionType }
+      }));
     } catch (error) {
       console.error("User action error:", error);
       toast.error(`Failed to ${actionType} user`);

@@ -137,15 +137,6 @@ export const register = async (req, res) => {
     const user = new User(userData);
     await user.save();
 
-    // Skip notifications for now to avoid registration issues
-    // if (isRecruiter) {
-    //   try {
-    //     await NotificationService.notifyRecruiterRegistration(user._id, company, name);
-    //   } catch (error) {
-    //     console.error("Notification error (non-blocking):", error);
-    //   }
-    // }
-
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -162,23 +153,43 @@ export const register = async (req, res) => {
 // @route POST /api/auth/login
 export const login = async (req, res) => {
   try {
+    console.log('Login attempt:', req.body);
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      console.log('Missing email or password');
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    console.log('Looking for user with email:', email);
     const user = await User.findOne({ email }).select("+password");
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    console.log('User found:', user ? { id: user._id, email: user.email, status: user.status, role: user.role } : 'No user found');
+    
+    if (!user) {
+      console.log('User not found for email:', email);
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
     if (user.status === "pending") {
+      console.log('User account pending approval:', user.email);
       return res.status(403).json({ message: "Account pending approval" });
     }
 
+    console.log('Comparing password...');
     const isMatch = await user.comparePassword(password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    console.log('Password match result:', isMatch);
+    
+    if (!isMatch) {
+      console.log('Password mismatch for user:', user.email);
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
     // Update last login and add activity log
     user.lastLogin = new Date();
     user.activityLog.push({ action: 'Logged in', date: new Date() });
     await user.save();
 
+    console.log('Login successful for user:', user.email);
     res.status(200).json({
       success: true,
       token: generateToken(user._id),
@@ -186,6 +197,7 @@ export const login = async (req, res) => {
       user: user.getPublicProfile(),
     });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ message: "Server Error", error: err.message });
   }
 };
@@ -193,7 +205,7 @@ export const login = async (req, res) => {
 // @route GET /api/auth/profile
 export const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate('assignedMentor', 'name email');
+    const user = await User.findById(req.user._id).populate('assignedMentor', 'name email');
     if (!user) return res.status(404).json({ message: "User not found" });
 
     res.json({
@@ -239,16 +251,16 @@ export const updateProfile = async (req, res) => {
       }
     }
 
-    // ✅ Ensure nested updates for socialLinks
-    if (updates.socialLinks) {
-      updates.socialLinks = {
-        linkedin: updates.socialLinks.linkedin || "",
-        github: updates.socialLinks.github || "",
-        portfolio: updates.socialLinks.portfolio || "",
-        twitter: updates.socialLinks.twitter || "",
-        leetcode: updates.socialLinks.leetcode || "",
-        codeforces: updates.socialLinks.codeforces || "",
-        hackerrank: updates.socialLinks.hackerrank || "",
+    // Handle nested updates for socialLinks
+    if (req.body.socialLinks) {
+      user.socialLinks = {
+        linkedin: req.body.socialLinks.linkedin || "",
+        github: req.body.socialLinks.github || "",
+        portfolio: req.body.socialLinks.portfolio || "",
+        twitter: req.body.socialLinks.twitter || "",
+        leetcode: req.body.socialLinks.leetcode || "",
+        codeforces: req.body.socialLinks.codeforces || "",
+        hackerrank: req.body.socialLinks.hackerrank || "",
       };
     }
 
