@@ -27,12 +27,6 @@ ITPO is a full-stack web application designed to streamline the internship and t
 - **Status Tracking**: Real-time application status updates
 - **Placement Management**: Automatic placement status updates
 
-### 🎨 Modern UI/UX
-- **Clean Design**: Minimal, professional interface
-- **Responsive Layout**: Mobile-first design approach
-- **Interactive Components**: Modal dialogs, dynamic forms, real-time updates
-- **Accessibility**: WCAG compliant design patterns
-
 ## 🏗️ Technical Architecture
 
 ### Frontend Stack
@@ -488,5 +482,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🌐 Multi-language support
 
 ---
-
-*Built with ❤️ for educational institutions to streamline their placement processes.*
