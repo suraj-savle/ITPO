@@ -331,4 +331,18 @@ GET /api/recommendations/student/:id # Get recommendations for student
 - 📈 Performance optimization
 - 🌐 Multi-language support
 
----
+### AdminPanel
+<img width="1920" height="1136" alt="admin-panel" src="https://github.com/user-attachments/assets/f00262bc-af45-4db4-bd6e-12fc4cee13cc" />
+
+### Login
+<img width="1920" height="970" alt="login" src="https://github.com/user-attachments/assets/2f8978b4-dfe6-4f79-825d-2357e18fc8e9" />
+
+### RecruiterPanel
+<img width="1920" height="987" alt="recruiter-1" src="https://github.com/user-attachments/assets/c2c275a2-a7aa-49e7-85d8-43d9f8596b28" />
+
+### MentorPanel
+<img width="1920" height="1036" alt="mentor-1" src="https://github.com/user-attachments/assets/06ec40ec-9a21-45ca-bf8f-bc31f1b8191f" />
+
+### SudentPanel
+<img width="1920" height="970" alt="student-4" src="https://github.com/user-attachments/assets/52b74d60-f536-48e4-8d21-147bdf6aa001" />
+
