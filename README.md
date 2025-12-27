@@ -27,12 +27,6 @@ ITPO is a full-stack web application designed to streamline the internship and t
 - **Status Tracking**: Real-time application status updates
 - **Placement Management**: Automatic placement status updates
 
-### 🎨 Modern UI/UX
-- **Clean Design**: Minimal, professional interface
-- **Responsive Layout**: Mobile-first design approach
-- **Interactive Components**: Modal dialogs, dynamic forms, real-time updates
-- **Accessibility**: WCAG compliant design patterns
-
 ## 🏗️ Technical Architecture
 
 ### Frontend Stack
@@ -152,50 +146,55 @@ ITPO/
 }
 ```
 
-## 🔧 Installation & Setup
+##  Installation & Setup
 
-### Prerequisites
-- Node.js (v16 or higher)
-- MongoDB (v4.4 or higher)
-- Python (v3.8 or higher)
-- Git
+### Clone the Repository
+
+```bash
+git clone https://github.com/suraj-savle/ITPO.git
+```
 
 ### Backend Setup
+
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd ITPO/backend
-
-# Install dependencies
+cd backend
 npm install
+```
 
-# Create environment file
-cp .env.example .env
+Create a `.env` file:
 
-# Configure environment variables
-MONGO_URI=mongodb://localhost:27017/itpo
-JWT_SECRET=your_jwt_secret_key
+```bash
+MONGO_URI=your_mongo_uri
+JWT_SECRET=your_jwt_secret
 PORT=5000
+```
 
-# Start the server
+### Important: Seed Admin Account (First Time Setup)
+
+Before starting the backend server for the first time, you must create an admin user.
+
+### Open the file: backend/scripts/seedAdmin.js
+Update the admin credentials inside the file:
+
+### Run the seed script from the backend/scripts folder:
+
+```bash
+node seedAdmin.js
+```
+
+This will create the admin account in the database.
+
+### Start the backend server:
+
+```bash
 npm start
 ```
 
 ### Frontend Setup
+
 ```bash
-# Navigate to frontend directory
 cd ../frontend
-
-# Install dependencies
 npm install
-
-# Create environment file
-cp .env.example .env
-
-# Configure environment variables
-VITE_API_URL=http://localhost:5000
-
-# Start development server
 npm run dev
 ```
 
@@ -286,21 +285,6 @@ GET /api/recommendations/jobs       # Get job recommendations
 GET /api/recommendations/student/:id # Get recommendations for student
 ```
 
-## 🎨 UI Components & Design System
-
-### Color Palette
-- **Primary**: Indigo (600, 700)
-- **Success**: Green (600, 700)
-- **Warning**: Yellow (600, 700)
-- **Error**: Red (600, 700)
-- **Neutral**: Gray (50, 100, 200, 600, 900)
-
-### Component Library
-- **Cards**: Clean white cards with subtle shadows
-- **Buttons**: Solid colors with hover states
-- **Forms**: Consistent input styling with validation
-- **Modals**: Centered overlays with backdrop
-- **Badges**: Status indicators with color coding
 
 ## 🔄 Workflow Processes
 
@@ -326,146 +310,6 @@ GET /api/recommendations/student/:id # Get recommendations for student
 3. **Monitor Progress**: Track student application status
 4. **Placement Updates**: Receive hiring notifications
 
-## 📱 Responsive Design
-
-### Breakpoints
-- **Mobile**: < 640px
-- **Tablet**: 640px - 1024px
-- **Desktop**: > 1024px
-
-### Mobile-First Approach
-- Touch-friendly interface
-- Optimized navigation
-- Readable typography
-- Fast loading times
-
-## 🧪 Testing Credentials
-
-### Student Accounts
-```
-Email: student@itpo.com
-Password: Student@123
-```
-
-### Mentor Accounts
-```
-CSE Mentor: csementor@itpo.com / CSEmentor@123
-IT Mentor: itmentor@itop.com / ITmentor@123
-Mechanical Mentor: mmentor@itpo.com / Mmentor@123
-```
-
-### Recruiter Account
-```
-Email: suraj@itpo.com
-Password: Pass@123
-```
-
-### Admin Account
-```
-Email: admin@itpo.com
-Password: admin123
-```
-
-## 🚀 Deployment
-
-### Production Environment
-- **Frontend**: Vercel/Netlify deployment
-- **Backend**: Railway/Heroku deployment
-- **Database**: MongoDB Atlas
-- **File Storage**: AWS S3 or Cloudinary
-
-### Environment Variables
-```bash
-# Backend
-MONGO_URI=mongodb+srv://...
-JWT_SECRET=production_secret
-NODE_ENV=production
-PORT=5000
-
-# Frontend
-VITE_API_URL=https://api.yourdomain.com
-VITE_ENV=production
-```
-
-## 📈 Performance Optimization
-
-### Frontend Optimizations
-- **Code Splitting**: Route-based lazy loading
-- **Image Optimization**: WebP format with fallbacks
-- **Bundle Analysis**: Webpack bundle analyzer
-- **Caching**: Service worker implementation
-
-### Backend Optimizations
-- **Database Indexing**: Optimized query performance
-- **Response Compression**: Gzip compression
-- **Rate Limiting**: API request throttling
-- **Caching**: Redis for session storage
-
-## 🔒 Security Measures
-
-### Data Protection
-- **Input Sanitization**: XSS prevention
-- **SQL Injection Prevention**: Parameterized queries
-- **File Upload Security**: Type and size validation
-- **HTTPS Enforcement**: SSL/TLS encryption
-
-### Authentication Security
-- **JWT Expiration**: Short-lived tokens
-- **Password Policies**: Strong password requirements
-- **Account Lockout**: Brute force protection
-- **Session Management**: Secure session handling
-
-## 🐛 Troubleshooting
-
-### Common Issues
-1. **CORS Errors**: Check frontend/backend URL configuration
-2. **Database Connection**: Verify MongoDB connection string
-3. **File Upload Issues**: Check multer configuration and file permissions
-4. **Authentication Failures**: Verify JWT secret and token expiration
-
-### Debug Mode
-```bash
-# Backend debugging
-DEBUG=* npm start
-
-# Frontend debugging
-npm run dev -- --debug
-```
-
-## 🤝 Contributing
-
-### Development Guidelines
-1. **Code Style**: Follow ESLint and Prettier configurations
-2. **Commit Messages**: Use conventional commit format
-3. **Branch Naming**: feature/description or fix/description
-4. **Pull Requests**: Include description and testing notes
-
-### Code Review Process
-1. Create feature branch
-2. Implement changes with tests
-3. Submit pull request
-4. Code review and approval
-5. Merge to main branch
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Team & Support
-
-### Development Team
-- **Full Stack Development**: Complete MERN stack implementation
-- **AI/ML Integration**: Python-based recommendation engine
-- **UI/UX Design**: Modern, responsive interface design
-- **Database Design**: Optimized MongoDB schema
-
-### Support & Contact
-- **Documentation**: Comprehensive inline documentation
-- **Issue Tracking**: GitHub Issues for bug reports
-- **Feature Requests**: GitHub Discussions for enhancements
-- **Community**: Discord/Slack for real-time support
-
----
 
 ## 🎯 Future Roadmap
 
@@ -488,5 +332,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🌐 Multi-language support
 
 ---
-
-*Built with ❤️ for educational institutions to streamline their placement processes.*
